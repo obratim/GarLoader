@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json.Serialization;
 
 namespace GarLoader.Engine
 {
@@ -15,6 +16,8 @@ namespace GarLoader.Engine
         public string GarXMLFullURL { get; set; }
         public string GarXMLDeltaURL { get; set; }
         public string Date { get; set; }
+        
+        [JsonIgnore]
         public DateTime? ParsedDate
         {
             get

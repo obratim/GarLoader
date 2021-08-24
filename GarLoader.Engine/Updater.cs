@@ -54,11 +54,8 @@ namespace GarLoader.Engine
 				UpdaterConfiguration.ServiceUri);
 			try
 			{
-				_logger.LogInformation("Проверка конфигурации ...");
-				if (!_uploader.CheckRegion())
-					throw new UpdateException("Код региона, указанный в конфигурационном файле не соответствует загруженным в БД данным");
-				else _logger.LogInformation("Указан корректный регион");
-		
+				_logger.LogInformation("Выполняется процесс загрузки");
+				
 				// if (System.IO.Directory.GetFiles(UpdaterConfiguration.ArchivesDirectory).Length > 0)
 				// 	throw new PreviousUpdateFailedException("Последняя попытка обновления завершилась неудачно. Остались старые файлы");
 				if (!System.IO.Directory.Exists(UpdaterConfiguration.ArchivesDirectory))
@@ -66,41 +63,23 @@ namespace GarLoader.Engine
 				foreach (var archPath in System.IO.Directory.GetFiles(UpdaterConfiguration.ArchivesDirectory))
 					System.IO.File.Delete(archPath);
 
-				_logger.LogInformation("Получение данных о последнем загруженном обновлении...");
-				var (lastUpdateId, lastUpdateDescription) = _uploader.GetLastUpdateIdAndDateTime();
-
-				List<FiasReference.DownloadFileInfo> downloadFileInfo;
-
-				_logger.LogInformation($"Загружена версия {lastUpdateId} ({lastUpdateDescription})");
-
-				_logger.LogInformation("Получение информации о последнем опубликованном обновлении...");
-
 				var updates = DownloadsArray().Result;
+				_logger.LogInformation("Получены сведения ссылки на загрузку архивов: " + updates.Count);
 
-				var newestUpdate = svc.GetLastDownloadFileInfoAsync().Result.Body.GetLastDownloadFileInfoResult;
-				_logger.LogInformation($"Самая новая опубликованная версия: {newestUpdate.VersionId} для {newestUpdate.TextVersion}");
-
-				switch (newestUpdate.VersionId)
+				var newestUpdate = updates
+					.Where(x => x.ParsedDate != null && !string.IsNullOrEmpty(x.GarXMLFullURL))
+					.OrderByDescending(x => x.ParsedDate)
+					.FirstOrDefault();
+				
+				if (newestUpdate == null)
 				{
-					case int id when id == lastUpdateId:
-						_logger.LogInformation("Обновление не требуется");
-						return; // обновление не требуется
-
-					case int id when id == lastUpdateId + 1:
-						_logger.LogInformation("Требуется загрузить 1 обновление");
-						downloadFileInfo = new List<FiasReference.DownloadFileInfo> { newestUpdate };
-						break;
-
-					default:
-						downloadFileInfo = GetUpdatesList(
-							svc,
-							x => x.VersionId > lastUpdateId);
-						_logger.LogInformation($"Будет загружено {downloadFileInfo.Count} обновлений");
-						break;
+					_logger.LogError("Не удалось получить информацию об обновлениях");
+					throw new Exception("Не удалось получить информацию об обновлениях");
 				}
 
-				foreach (var meta in downloadFileInfo)
-					Update(meta);
+				_logger.LogInformation("Самая актуальная версия для загрузки: " + System.Text.Json.JsonSerializer.Serialize(newestUpdate));
+
+				// todo: load newest update
 			}
 			catch (Exception e)
 			{
