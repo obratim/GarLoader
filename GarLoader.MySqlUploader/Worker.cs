@@ -14,12 +14,14 @@ namespace GarLoader.MySqlUploader
         private readonly ILogger<Worker> _logger;
         private readonly IUploader _uploader;
         private readonly Updater _updater;
+        private readonly IHostApplicationLifetime _lifetime;
 
-        public Worker(ILogger<Worker> logger, IUploader uploader, Updater updater)
+        public Worker(ILogger<Worker> logger, IUploader uploader, Updater updater, IHostApplicationLifetime lifetime)
         {
             _logger = logger;
             _uploader = uploader;
             _updater = updater;
+            _lifetime = lifetime;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -30,6 +32,7 @@ namespace GarLoader.MySqlUploader
                 _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
                 await Task.Delay(1000, stoppingToken);
             }*/
+            _lifetime.StopApplication();
         }
     }
 }
