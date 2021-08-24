@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using GarLoader.Engine;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -11,19 +12,24 @@ namespace GarLoader.MySqlUploader
     public class Worker : BackgroundService
     {
         private readonly ILogger<Worker> _logger;
+        private readonly IUploader _uploader;
+        private readonly Updater _updater;
 
-        public Worker(ILogger<Worker> logger)
+        public Worker(ILogger<Worker> logger, IUploader uploader, Updater updater)
         {
             _logger = logger;
+            _uploader = uploader;
+            _updater = updater;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            while (!stoppingToken.IsCancellationRequested)
+            _updater.Update();
+            /*while (!stoppingToken.IsCancellationRequested)
             {
                 _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
                 await Task.Delay(1000, stoppingToken);
-            }
+            }*/
         }
     }
 }
