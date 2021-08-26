@@ -13,6 +13,8 @@ namespace GarLoader.Engine
         public int ArchiveDownloadTimeoutInMilliseconds { get; set; }
         public int DbExecuteTimeoutSeconds { get; set; }
 
+        public string GarFullPath { get; set; }
+
         public UpdaterConfiguration()
         {
             ArchivesDirectory = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "./archives/");

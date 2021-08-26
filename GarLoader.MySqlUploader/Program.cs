@@ -2,9 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using CommandLine;
 using GarLoader.Engine;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace GarLoader.MySqlUploader
 {
@@ -15,8 +17,22 @@ namespace GarLoader.MySqlUploader
             CreateHostBuilder(args).Build().Run();
         }
 
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
+        public static IHostBuilder CreateHostBuilder(string[] args)
+        {
+            var config = CommandLine.Parser.Default
+                .ParseArguments<CmdOptions>(args)
+                .MapResult(o => (true, new UpdaterConfiguration {
+                    GarFullPath = o.GarFilePath,
+                }, default(IEnumerable<Error>)),
+                errors => (false, default, errors));
+            if (!config.Item1)
+            {
+                foreach (var e in config.Item3)
+                    Console.WriteLine(e.ToString());
+                throw new Exception("Не распарсил");
+            }
+            return Host
+                .CreateDefaultBuilder(args)
                 .ConfigureServices((hostContext, services) =>
                 {
                     services.AddSingleton<IUploader, UploaderToMySql>();
@@ -25,7 +41,20 @@ namespace GarLoader.MySqlUploader
                         .Bind(hostContext.Configuration.GetSection("UpdaterConfiguration"))
                         .ValidateDataAnnotations();
                     services.AddSingleton<Updater>();
-                    services.AddHostedService<Worker>();
+                    services.AddHostedService<Worker>(provider => new Worker(
+                        provider.GetRequiredService<ILogger<Worker>>(),
+                        provider.GetRequiredService<IUploader>(),
+                        provider.GetRequiredService<Updater>(),
+                        provider.GetRequiredService<IHostApplicationLifetime>(),
+                        config.Item2
+                    ));
                 });
+        }
+    }
+
+    class CmdOptions
+    {
+        [Option('f', "filepath", HelpText = "Путь к архиву ГАР")]
+        public string GarFilePath { get; set; }
     }
 }
