@@ -79,7 +79,7 @@ namespace GarLoader.Engine
 
 				_logger.LogInformation("Самая актуальная версия для загрузки: " + System.Text.Json.JsonSerializer.Serialize(newestUpdate));
 
-				// todo: load newest update
+				Update(newestUpdate);
 			}
 			catch (Exception e)
 			{
@@ -93,31 +93,7 @@ namespace GarLoader.Engine
 			}
 		}
 		
-		private List<FiasReference.DownloadFileInfo> GetUpdatesList(
-			FiasReference.DownloadServiceSoapClient svc,
-			Func<FiasReference.DownloadFileInfo, bool> predicate)
-		{
-			using (var iterator = svc.GetAllDownloadFileInfoAsync().Result.Body.GetAllDownloadFileInfoResult.AsEnumerable().GetEnumerator())
-			{
-				var results = new List<FiasReference.DownloadFileInfo>();
-
-				if (!iterator.MoveNext())
-					throw new UpdateException("Ошибка при получении списка обновлений");
-
-				if (predicate(iterator.Current)) // самый ранний доступный файл новее загруженных данных, возможно пропущены ещё более ранние
-					throw new CurrentDataExpiredException("Данные устарели, необходимо выполнить полную загрузку БД ФИАС");
-
-				while (iterator.MoveNext())
-				{
-					if (predicate(iterator.Current))
-						results.Add(iterator.Current);
-				}
-
-				return results;
-			}
-		}
-
-		private void Update(FiasReference.DownloadFileInfo downloadFileInfo)
+		private void Update(DownloadFileInfo downloadFileInfo)
 		{
 			_logger.LogInformation($"Загрузка обновления {downloadFileInfo.VersionId} ({downloadFileInfo.TextVersion})");
 
@@ -128,16 +104,16 @@ namespace GarLoader.Engine
 			_logger.LogInformation($"Скачивание файла {downloadFileInfo.FiasDeltaXmlUrl} ...");
 			using (var client = new System.Net.WebClient())
 			{
-				archPath = System.IO.Path.Combine(UpdaterConfiguration.ArchivesDirectory, $"delta {downloadFileInfo.VersionId}.rar");
+				archPath = System.IO.Path.Combine(UpdaterConfiguration.ArchivesDirectory, $"gar {downloadFileInfo.VersionId}.zip");
 
 				var t = client.DownloadFileTaskAsync(
-					downloadFileInfo.FiasDeltaXmlUrl,
+					downloadFileInfo.GarXMLFullURL,
 					archPath);
 				t.Wait(UpdaterConfiguration.ArchiveDownloadTimeoutInMilliseconds);
 				if (!t.IsCompleted) throw new TimeoutException("Истекло время ожидания скачивания архива с данными");
 				_logger.LogInformation($"Загружено {(new System.IO.FileInfo(archPath).Length / 1024.0 / 1024.0):0.00} МиБ");
 			}
-			_logger.LogInformation("Архив с данными загружен");
+			_logger.LogInformation("Архив с данными загружен: " + archPath);
 			
 			_uploader.InitializeTempTables();
 			_logger.LogInformation("Созданы временные таблицы");
