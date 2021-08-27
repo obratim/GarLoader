@@ -21,13 +21,16 @@ namespace GarLoader.Engine
         //public static log4net.ILog Logger => Helpers.Logger.Value;
 
 		private readonly IOptions<UpdaterConfiguration> _configurationSnapshot;
-		private UpdaterConfiguration UpdaterConfiguration => _configurationSnapshot.Value;
+		private UpdaterConfiguration _configurationFromArguments;
+		private UpdaterConfiguration _updaterConfiguration;
+		private UpdaterConfiguration UpdaterConfiguration => _updaterConfiguration ??= _configurationFromArguments.Combine(_configurationSnapshot.Value);
 
-        public Updater(IUploader uploader, ILogger<Updater> logger, IOptions<UpdaterConfiguration> configurationSnapshot)
+        public Updater(IUploader uploader, ILogger<Updater> logger, IOptions<UpdaterConfiguration> configurationSnapshot, UpdaterConfiguration configurationFromArguments)
         {
             _uploader = uploader;
             _logger = logger;
             _configurationSnapshot = configurationSnapshot;
+            _configurationFromArguments = configurationFromArguments;
             _addressObjectGuids = new Lazy<HashSet<Guid>>(() => new HashSet<Guid>(_uploader.GetAddressObjectGuids()));
 
             _logger.LogInformation("Запущена программа обновления БД ФИАС");

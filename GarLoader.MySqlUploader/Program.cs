@@ -7,6 +7,7 @@ using GarLoader.Engine;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace GarLoader.MySqlUploader
 {
@@ -40,14 +41,13 @@ namespace GarLoader.MySqlUploader
                         .AddOptions<UpdaterConfiguration>()
                         .Bind(hostContext.Configuration.GetSection("UpdaterConfiguration"))
                         .ValidateDataAnnotations();
-                    services.AddSingleton<Updater>();
-                    services.AddHostedService<Worker>(provider => new Worker(
-                        provider.GetRequiredService<ILogger<Worker>>(),
+                    services.AddSingleton<Updater>(provider => new Updater(
                         provider.GetRequiredService<IUploader>(),
-                        provider.GetRequiredService<Updater>(),
-                        provider.GetRequiredService<IHostApplicationLifetime>(),
+                        provider.GetRequiredService<ILogger<Updater>>(),
+                        provider.GetRequiredService<IOptions<UpdaterConfiguration>>(),
                         config.Item2
                     ));
+                    services.AddHostedService<Worker>();
                 });
         }
     }

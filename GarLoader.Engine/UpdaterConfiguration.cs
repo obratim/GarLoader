@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text;
 
 namespace GarLoader.Engine
@@ -9,18 +10,25 @@ namespace GarLoader.Engine
         public string ServiceUri { get; set; }
         public string ArchivesDirectory { get; set; }
         public string RegionNumber { get; set; }
-        public int ManualDownloadFiasNumber { get; set; }
-        public int ArchiveDownloadTimeoutInMilliseconds { get; set; }
-        public int DbExecuteTimeoutSeconds { get; set; }
+        public TimeSpan? ArchiveDownloadTimeout { get; set; }
+        public TimeSpan? DbExecuteTimeout { get; set; }
+        
+        public TimeSpan ArchiveDownloadTimeoutValue => ArchiveDownloadTimeout ?? TimeSpan.FromHours(12);
+        public TimeSpan DbExecuteTimeoutValue => DbExecuteTimeout ?? TimeSpan.FromSeconds(900);
 
         public string GarFullPath { get; set; }
 
-        public UpdaterConfiguration()
-        {
-            ArchivesDirectory = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "./archives/");
-            ServiceUri = "https://fias.nalog.ru/WebServices/Public/GetAllDownloadFileInfo";
-            ArchiveDownloadTimeoutInMilliseconds = 1_000_000;
-            DbExecuteTimeoutSeconds = 900;
-        }
+        public UpdaterConfiguration Combine (UpdaterConfiguration basicConfiguration)
+            =>
+                new UpdaterConfiguration
+                {
+                    ConnectionString = this.ConnectionString ?? basicConfiguration.ConnectionString,
+                    ServiceUri = this.ServiceUri ?? basicConfiguration.ServiceUri ?? "https://fias.nalog.ru/WebServices/Public/GetAllDownloadFileInfo",
+                    ArchivesDirectory = this.ArchivesDirectory ?? basicConfiguration.ArchivesDirectory ?? System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "./archives/"),
+                    RegionNumber = this.RegionNumber ?? basicConfiguration.RegionNumber,
+                    ArchiveDownloadTimeout = this.ArchiveDownloadTimeout ?? basicConfiguration.ArchiveDownloadTimeout ?? TimeSpan.FromHours(12),
+                    DbExecuteTimeout = this.DbExecuteTimeout ?? basicConfiguration.DbExecuteTimeout ?? TimeSpan.FromSeconds(900),
+                    GarFullPath = this.GarFullPath ?? basicConfiguration.GarFullPath,
+                };
     }
 }
