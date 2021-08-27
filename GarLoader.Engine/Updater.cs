@@ -36,7 +36,7 @@ namespace GarLoader.Engine
             _logger.LogInformation("Запущена программа обновления БД ФИАС");
         }
 
-        public void Update(UpdaterConfiguration instanceConfig)
+        public void Update()
         {
 			// 0. если в папке с архивами лежит старый архив, значит предыдущие обновление завершилось неуспешно. выходим
 			// 0.1 восстанавливаем структуру БД: проверяем создана ли табл с историей обновлений, пересоздаём временные таблицы
@@ -69,20 +69,25 @@ namespace GarLoader.Engine
 				var updates = DownloadsArray().Result;
 				_logger.LogInformation("Получены сведения ссылки на загрузку архивов: " + updates.Count);
 
-				var newestUpdate = updates
-					.Where(x => x.ParsedDate != null && !string.IsNullOrEmpty(x.GarXMLFullURL))
-					.OrderByDescending(x => x.ParsedDate)
-					.FirstOrDefault();
-				
-				if (newestUpdate == null)
+				if (string.IsNullOrEmpty(UpdaterConfiguration.GarFullPath))
 				{
-					_logger.LogError("Не удалось получить информацию об обновлениях");
-					throw new Exception("Не удалось получить информацию об обновлениях");
+					var newestUpdate = updates
+						.Where(x => x.ParsedDate != null && !string.IsNullOrEmpty(x.GarXMLFullURL))
+						.OrderByDescending(x => x.ParsedDate)
+						.FirstOrDefault();
+					
+					if (newestUpdate == null)
+					{
+						_logger.LogError("Не удалось получить информацию об обновлениях");
+						throw new Exception("Не удалось получить информацию об обновлениях");
+					}
+
+					_logger.LogInformation("Самая актуальная версия для загрузки: " + System.Text.Json.JsonSerializer.Serialize(newestUpdate));
+
+					Update(newestUpdate);
 				}
-
-				_logger.LogInformation("Самая актуальная версия для загрузки: " + System.Text.Json.JsonSerializer.Serialize(newestUpdate));
-
-				Update(newestUpdate);
+				else
+					Update(default);
 			}
 			catch (Exception e)
 			{
@@ -98,25 +103,28 @@ namespace GarLoader.Engine
 		
 		private void Update(DownloadFileInfo downloadFileInfo)
 		{
-			_logger.LogInformation($"Загрузка обновления {downloadFileInfo.VersionId} ({downloadFileInfo.TextVersion})");
-
-			string archPath;
-
 			var processDt = DateTime.Now;
 
-			_logger.LogInformation($"Скачивание файла {downloadFileInfo.FiasDeltaXmlUrl} ...");
-			using (var client = new System.Net.WebClient())
+			if (string.IsNullOrEmpty(UpdaterConfiguration.GarFullPath))
 			{
-				archPath = System.IO.Path.Combine(UpdaterConfiguration.ArchivesDirectory, $"gar {downloadFileInfo.VersionId}.zip");
+				_logger.LogInformation($"Загрузка обновления {downloadFileInfo.VersionId} ({downloadFileInfo.TextVersion})");
 
-				var t = client.DownloadFileTaskAsync(
-					downloadFileInfo.GarXMLFullURL,
-					archPath);
-				t.Wait(UpdaterConfiguration.ArchiveDownloadTimeoutInMilliseconds);
-				if (!t.IsCompleted) throw new TimeoutException("Истекло время ожидания скачивания архива с данными");
-				_logger.LogInformation($"Загружено {(new System.IO.FileInfo(archPath).Length / 1024.0 / 1024.0):0.00} МиБ");
+				_logger.LogInformation($"Скачивание файла {downloadFileInfo.FiasDeltaXmlUrl} ...");
+				using (var client = new System.Net.WebClient())
+				{
+					UpdaterConfiguration.GarFullPath = System.IO.Path.Combine(UpdaterConfiguration.ArchivesDirectory, $"gar {downloadFileInfo.VersionId}.zip");
+
+					var t = client.DownloadFileTaskAsync(
+						downloadFileInfo.GarXMLFullURL,
+						UpdaterConfiguration.GarFullPath);
+					t.Wait(UpdaterConfiguration.ArchiveDownloadTimeoutValue.Milliseconds);
+					if (!t.IsCompleted) throw new TimeoutException("Истекло время ожидания скачивания архива с данными");
+					_logger.LogInformation($"Загружено {(new System.IO.FileInfo(UpdaterConfiguration.GarFullPath).Length / 1024.0 / 1024.0):0.00} МиБ");
+				}
+				_logger.LogInformation("Архив с данными загружен: " + UpdaterConfiguration.GarFullPath);
 			}
-			_logger.LogInformation("Архив с данными загружен: " + archPath);
+			else
+				_logger.LogInformation("Будет использован архив с данными: " + UpdaterConfiguration.GarFullPath);
 			
 			_uploader.InitializeTempTables();
 			_logger.LogInformation("Созданы временные таблицы");
