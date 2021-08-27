@@ -3,7 +3,7 @@ using System.Text;
 
 namespace GarLoader.Engine
 {
-    public class UpdaterConfiguration : IUpdaterConfiguration
+    public class UpdaterConfiguration
     {
         public string ConnectionString { get; set; }
         public string ServiceUri { get; set; }
