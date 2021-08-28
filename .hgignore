@@ -2,3 +2,5 @@ syntax: glob
 **/bin/Debug/**
 **/obj/Debug/**
 **/obj/**
+**/bin/Release/**
+publish/**
