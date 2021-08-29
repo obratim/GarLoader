@@ -66,9 +66,6 @@ namespace GarLoader.Engine
 				foreach (var archPath in System.IO.Directory.GetFiles(UpdaterConfiguration.ArchivesDirectory))
 					System.IO.File.Delete(archPath);
 
-				var updates = DownloadsArray().Result;
-				_logger.LogInformation("Получены сведения ссылки на загрузку архивов: " + updates.Count);
-
 				if (string.IsNullOrEmpty(UpdaterConfiguration.GarFullPath))
 				{
 					var newestUpdate = updates
