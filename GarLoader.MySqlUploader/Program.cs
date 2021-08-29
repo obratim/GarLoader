@@ -57,12 +57,8 @@ namespace GarLoader.MySqlUploader
                         .AddOptions<UpdaterConfiguration>()
                         .Bind(hostContext.Configuration.GetSection("UpdaterConfiguration"))
                         .ValidateDataAnnotations();
-                    services.AddSingleton<Updater>(provider => new Updater(
-                        provider.GetRequiredService<IUploader>(),
-                        provider.GetRequiredService<ILogger<Updater>>(),
-                        provider.GetRequiredService<IOptions<UpdaterConfiguration>>(),
-                        config.Item2
-                    ));
+                    services.AddSingleton<UpdaterConfiguration>(provider => config.Item2.Combine(provider.GetRequiredService<IOptions<UpdaterConfiguration>>().Value));
+                    services.AddSingleton<Updater>();
                     services.AddHostedService<Worker>();
                 });
         }

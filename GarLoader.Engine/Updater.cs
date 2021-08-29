@@ -16,17 +16,13 @@ namespace GarLoader.Engine
 
 		private readonly ILogger _logger;
 
-		private readonly IOptions<UpdaterConfiguration> _configurationSnapshot;
-		private UpdaterConfiguration _configurationFromArguments;
-		private UpdaterConfiguration _updaterConfiguration;
-		private UpdaterConfiguration UpdaterConfiguration => _updaterConfiguration ??= _configurationFromArguments.Combine(_configurationSnapshot.Value);
+		private readonly UpdaterConfiguration _updaterConfiguration;
 
-        public Updater(IUploader uploader, ILogger<Updater> logger, IOptions<UpdaterConfiguration> configurationSnapshot, UpdaterConfiguration configurationFromArguments)
+        public Updater(IUploader uploader, ILogger<Updater> logger, UpdaterConfiguration updaterConfiguration)
         {
             _uploader = uploader;
             _logger = logger;
-            _configurationSnapshot = configurationSnapshot;
-            _configurationFromArguments = configurationFromArguments;
+            _updaterConfiguration = updaterConfiguration;
 
             _logger.LogInformation("Запущена программа обновления БД ФИАС");
         }
@@ -49,19 +45,19 @@ namespace GarLoader.Engine
 
 			var svc = new FiasReference.DownloadServiceSoapClient(
 				FiasReference.DownloadServiceSoapClient.EndpointConfiguration.DownloadServiceSoap12,
-				UpdaterConfiguration.ServiceUri);
+				_updaterConfiguration.ServiceUri);
 			try
 			{
 				_logger.LogInformation("Выполняется процесс загрузки");
 				
 				// if (System.IO.Directory.GetFiles(UpdaterConfiguration.ArchivesDirectory).Length > 0)
 				// 	throw new PreviousUpdateFailedException("Последняя попытка обновления завершилась неудачно. Остались старые файлы");
-				if (!System.IO.Directory.Exists(UpdaterConfiguration.ArchivesDirectory))
-					System.IO.Directory.CreateDirectory(UpdaterConfiguration.ArchivesDirectory);
-				foreach (var archPath in System.IO.Directory.GetFiles(UpdaterConfiguration.ArchivesDirectory))
+				if (!System.IO.Directory.Exists(_updaterConfiguration.ArchivesDirectory))
+					System.IO.Directory.CreateDirectory(_updaterConfiguration.ArchivesDirectory);
+				foreach (var archPath in System.IO.Directory.GetFiles(_updaterConfiguration.ArchivesDirectory))
 					System.IO.File.Delete(archPath);
 
-				if (string.IsNullOrEmpty(UpdaterConfiguration.GarFullPath))
+				if (string.IsNullOrEmpty(_updaterConfiguration.GarFullPath))
 				{
 					var updates = DownloadsArray().Result;
 					_logger.LogInformation("Получены сведения ссылки на загрузку архивов: " + updates.Count);
@@ -100,28 +96,28 @@ namespace GarLoader.Engine
 		{
 			var processDt = DateTime.Now;
 
-			if (string.IsNullOrEmpty(UpdaterConfiguration.GarFullPath))
+			if (string.IsNullOrEmpty(_updaterConfiguration.GarFullPath))
 			{
 				_logger.LogInformation($"Загрузка обновления {downloadFileInfo.VersionId} ({downloadFileInfo.TextVersion})");
 
 				_logger.LogInformation($"Скачивание файла {downloadFileInfo.GarXMLFullURL} ...");
 				using (var client = new System.Net.WebClient())
 				{
-					UpdaterConfiguration.GarFullPath = System.IO.Path.Combine(UpdaterConfiguration.ArchivesDirectory, $"gar {downloadFileInfo.VersionId}.zip");
+					_updaterConfiguration.GarFullPath = System.IO.Path.Combine(_updaterConfiguration.ArchivesDirectory, $"gar {downloadFileInfo.VersionId}.zip");
 
 					var t = client.DownloadFileTaskAsync(
 						downloadFileInfo.GarXMLFullURL,
-						UpdaterConfiguration.GarFullPath);
-					t.Wait(UpdaterConfiguration.ArchiveDownloadTimeoutValue.Milliseconds);
+						_updaterConfiguration.GarFullPath);
+					t.Wait(_updaterConfiguration.ArchiveDownloadTimeoutValue.Milliseconds);
 					if (!t.IsCompleted) throw new TimeoutException("Истекло время ожидания скачивания архива с данными");
-					_logger.LogInformation($"Загружено {(new System.IO.FileInfo(UpdaterConfiguration.GarFullPath).Length / 1024.0 / 1024.0):0.00} МиБ");
+					_logger.LogInformation($"Загружено {(new System.IO.FileInfo(_updaterConfiguration.GarFullPath).Length / 1024.0 / 1024.0):0.00} МиБ");
 				}
-				_logger.LogInformation("Архив с данными загружен: " + UpdaterConfiguration.GarFullPath);
+				_logger.LogInformation("Архив с данными загружен: " + _updaterConfiguration.GarFullPath);
 			}
 			else
-				_logger.LogInformation("Будет использован архив с данными: " + UpdaterConfiguration.GarFullPath);
+				_logger.LogInformation("Будет использован архив с данными: " + _updaterConfiguration.GarFullPath);
 			
-			using var archiveFile = System.IO.File.OpenRead(UpdaterConfiguration.GarFullPath);
+			using var archiveFile = System.IO.File.OpenRead(_updaterConfiguration.GarFullPath);
 			using var arch = new System.IO.Compression.ZipArchive(archiveFile);
 			var entryAddressObjectType = arch.Entries.FirstOrDefault(e => e.FullName.StartsWith("AS_ADDR_OBJ_TYPES_"));
 			if (entryAddressObjectType == null)
@@ -150,7 +146,7 @@ namespace GarLoader.Engine
 						case string entryName when Regex.IsMatch(entryName, "^AS_ADDROBJ_.*"):
 							_logger.Debug($"Загрузка адресных объектов во временную таблицу ...");
 							var objects = GetObjectsFromXmlReader<FiasTypes.AddressObject>(entry)
-									.Where(x => x.RegionCode == UpdaterConfiguration.RegionNumber)
+									.Where(x => x.RegionCode == _updaterConfiguration.RegionNumber)
 									.ToArray();
 
 							_uploader.PutAddressObjectsChanges(entryName, objects);
@@ -199,7 +195,7 @@ namespace GarLoader.Engine
 							_logger.Debug($"Загрузка удаляемых адресных объектов ...");
 							addressObjectsToDelete.AddRange(
 								GetObjectsFromXmlReader<FiasTypes.AddressObject>(entry)
-									.Where(x => x.RegionCode == UpdaterConfiguration.RegionNumber));
+									.Where(x => x.RegionCode == _updaterConfiguration.RegionNumber));
 							_logger.Debug($"Устаревшие адресные объекты будут удалены ({addressObjectsToDelete.Count} записей)");
 							break;
 
@@ -277,7 +273,7 @@ namespace GarLoader.Engine
 		private async IAsyncEnumerable<DownloadFileInfo> Downloads()
 		{
 			using var client = new System.Net.Http.HttpClient();
-			var data = await client.GetAsync(UpdaterConfiguration.ServiceUri);
+			var data = await client.GetAsync(_updaterConfiguration.ServiceUri);
 			if (!data.IsSuccessStatusCode)
 				throw new Exception("Не удалось загрузить.\n" + data.StatusCode + "\n" + await data.Content.ReadAsStringAsync());
 			foreach (var item in (await data.Content.ReadFromJsonAsync<IEnumerable<DownloadFileInfo>>()))
