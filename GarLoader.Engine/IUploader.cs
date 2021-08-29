@@ -7,8 +7,6 @@ namespace GarLoader.Engine
     {
 		bool CheckRegion();
 
-		void InitializeTempTables();
-
 		(int, string) GetLastUpdateIdAndDateTime();
 
 		IEnumerable<Guid> GetAddressObjectGuids();
