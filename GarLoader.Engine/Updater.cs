@@ -14,11 +14,7 @@ namespace GarLoader.Engine
 	{
 		private readonly IUploader _uploader;
 
-		private readonly Lazy<HashSet<Guid>> _addressObjectGuids;
-		private HashSet<Guid> AddressObjectGuids => _addressObjectGuids.Value;
-
 		private readonly ILogger _logger;
-        //public static log4net.ILog Logger => Helpers.Logger.Value;
 
 		private readonly IOptions<UpdaterConfiguration> _configurationSnapshot;
 		private UpdaterConfiguration _configurationFromArguments;
@@ -31,7 +27,6 @@ namespace GarLoader.Engine
             _logger = logger;
             _configurationSnapshot = configurationSnapshot;
             _configurationFromArguments = configurationFromArguments;
-            _addressObjectGuids = new Lazy<HashSet<Guid>>(() => new HashSet<Guid>(_uploader.GetAddressObjectGuids()));
 
             _logger.LogInformation("Запущена программа обновления БД ФИАС");
         }
