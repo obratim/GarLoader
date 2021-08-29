@@ -5,16 +5,12 @@ namespace GarLoader.Engine
 {
     public interface IUploader
     {
-		bool CheckRegion();
-
-		(int, string) GetLastUpdateIdAndDateTime();
-
-		IEnumerable<Guid> GetAddressObjectGuids();
-
 		//void PutAddressObjectsChanges(string entryName, IEnumerable<FiasTypes.AddressObject> addressObjects);
 		//void PutHousesChanges(string entryName, IEnumerable<FiasTypes.House> houses);
 		//void PutHouseIntsChanges(string entryName, IEnumerable<FiasTypes.HouseInterval> houseIntervals);
 		//void PutLandmarksChanges(string entryName, IEnumerable<FiasTypes.Landmark> landmarks);
+
+		public void InsertAddressObjectTypes(IEnumerable<AddressObjectType> items);
 		
 		void UpdateDb(
 			int updateId,
