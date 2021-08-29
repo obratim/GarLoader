@@ -63,6 +63,9 @@ namespace GarLoader.Engine
 
 				if (string.IsNullOrEmpty(UpdaterConfiguration.GarFullPath))
 				{
+					var updates = DownloadsArray().Result;
+					_logger.LogInformation("Получены сведения ссылки на загрузку архивов: " + updates.Count);
+
 					var newestUpdate = updates
 						.Where(x => x.ParsedDate != null && !string.IsNullOrEmpty(x.GarXMLFullURL))
 						.OrderByDescending(x => x.ParsedDate)
@@ -118,8 +121,18 @@ namespace GarLoader.Engine
 			else
 				_logger.LogInformation("Будет использован архив с данными: " + UpdaterConfiguration.GarFullPath);
 			
-			_uploader.InitializeTempTables();
-			_logger.LogInformation("Созданы временные таблицы");
+			using var archiveFile = System.IO.File.OpenRead(UpdaterConfiguration.GarFullPath);
+			using var arch = new System.IO.Compression.ZipArchive(archiveFile);
+			var entryAddressObjectType = arch.Entries.FirstOrDefault(e => e.FullName.StartsWith("AS_ADDR_OBJ_TYPES_"));
+			if (entryAddressObjectType == null)
+				_logger.LogWarning("Отсутствуют справочные данные по типам адресных объектов");
+			else
+			{
+				//var objectTypes = AddressObjectTypes.Deserialize(entryAddressObjectType.Open());
+				using var stream = entryAddressObjectType.Open();
+				var objectTypes = GetObjectsFromXmlReader<AddressObjectType>(stream).ToArray();
+				//_uploader.
+			}
 
 			/*using (var arch = SharpCompress.Archives.Rar.RarArchive.Open(archPath))
 			{
@@ -234,14 +247,13 @@ namespace GarLoader.Engine
 				_logger.Info($"База данных обновлена до версии {downloadFileInfo.VersionId} ({downloadFileInfo.TextVersion})");
 			}
 			System.IO.File.Delete(archPath);
-			_logger.Debug("Архив с данными удалён");
+			_logger.Debug("Архив с данными удалён");*/
 		}
 
-		private static IEnumerable<T> GetObjectsFromXmlReader<T>(SharpCompress.Archives.Rar.RarArchiveEntry entry)
+		private static IEnumerable<T> GetObjectsFromXmlReader<T>(System.IO.Stream entry)
 			where T : class
 		{
-			using (var s = entry.OpenEntryStream())
-			using (var xr = XmlReader.Create(s, Helpers.XmlSettings))
+			using (var xr = XmlReader.Create(entry, Helpers.XmlSettings))
 			{
 				var serializer = new System.Xml.Serialization.XmlSerializer(typeof(T));
 				var name = ((typeof(T).GetCustomAttributes(
@@ -259,7 +271,7 @@ namespace GarLoader.Engine
 						else break;
 					}
 				}
-			}*/
+			}
 		}
 
 		private async IAsyncEnumerable<DownloadFileInfo> Downloads()

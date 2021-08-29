@@ -23,9 +23,9 @@ namespace GarLoader.Engine
 			where T : FiasTypes.ILegacyObject
 			=> objects.Where(x => x.EndDate > minEndDate && addressObjectGuids.Contains(x.AoGuid));
 
-
+*/
         internal static System.Xml.XmlReaderSettings XmlSettings = new System.Xml.XmlReaderSettings();
-
+/*
         internal static readonly Lazy<log4net.ILog> Logger = new Lazy<log4net.ILog>(() =>
         {
             var logger = log4net.LogManager.GetLogger(typeof(Updater));
