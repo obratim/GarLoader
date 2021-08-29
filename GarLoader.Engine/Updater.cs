@@ -109,7 +109,7 @@ namespace GarLoader.Engine
 			{
 				_logger.LogInformation($"Загрузка обновления {downloadFileInfo.VersionId} ({downloadFileInfo.TextVersion})");
 
-				_logger.LogInformation($"Скачивание файла {downloadFileInfo.FiasDeltaXmlUrl} ...");
+				_logger.LogInformation($"Скачивание файла {downloadFileInfo.GarXMLFullURL} ...");
 				using (var client = new System.Net.WebClient())
 				{
 					UpdaterConfiguration.GarFullPath = System.IO.Path.Combine(UpdaterConfiguration.ArchivesDirectory, $"gar {downloadFileInfo.VersionId}.zip");
