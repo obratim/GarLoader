@@ -126,8 +126,9 @@ namespace GarLoader.Engine
 			{
 				//var objectTypes = AddressObjectTypes.Deserialize(entryAddressObjectType.Open());
 				using var stream = entryAddressObjectType.Open();
-				var objectTypes = GetObjectsFromXmlReader<AddressObjectType>(stream).ToArray();
+				//var objectTypes = GetObjectsFromXmlReader<AddressObjectType>(stream).ToArray();
 				//_uploader.
+				_uploader.InsertAddressObjectTypes(GetObjectsFromXmlReader<AddressObjectType>(stream));
 			}
 
 			/*using (var arch = SharpCompress.Archives.Rar.RarArchive.Open(archPath))
