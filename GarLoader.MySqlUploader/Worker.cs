@@ -35,4 +35,24 @@ namespace GarLoader.MySqlUploader
             _lifetime.StopApplication();
         }
     }
+
+    public class GenericContext<T>
+    {
+        private T _value;
+        volatile private bool _initialized = false;
+
+        public void Initialize(T value)
+        {
+            _value = value;
+            _initialized = true;
+        }
+
+        public T GetValue()
+        {
+            if (_initialized)
+                return _value;
+            else
+                throw new Exception("Context not initialized");
+        }
+    }
 }
