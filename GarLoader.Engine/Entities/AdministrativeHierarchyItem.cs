@@ -19,22 +19,22 @@ namespace GarLoader.Engine
         public long ChangeTransactionId { get; set; }
 
         [XmlAttribute("REGIONCODE")]
-        public string RegionCode { get; set; }
+        public int? RegionCode { get; set; }
 
         [XmlAttribute("AREACODE")]
-        public string AreaCode { get; set; }
+        public int? AreaCode { get; set; }
 
         [XmlAttribute("CITYCODE")]
-        public string CityCode { get; set; }
+        public int? CityCode { get; set; }
 
         [XmlAttribute("PLACECODE")]
-        public string PlaceCode { get; set; }
+        public int? PlaceCode { get; set; }
 
         [XmlAttribute("PLANCODE")]
-        public string PlanCode { get; set; }
+        public int? PlanCode { get; set; }
 
         [XmlAttribute("STREETCODE")]
-        public string StreetCode { get; set; }
+        public int? StreetCode { get; set; }
 
         [XmlAttribute("PREVID")]
         public long? PrevId { get; set; }
@@ -52,6 +52,6 @@ namespace GarLoader.Engine
         public DateTime EndDate { get; set; }
 
         [XmlAttribute("ISACTIVE")]
-        public byte IsActive { get; set; }
+        public int IsActive { get; set; }
     }
 }

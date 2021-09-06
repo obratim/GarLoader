@@ -35,6 +35,6 @@ namespace GarLoader.Engine
         public DateTime EndDate { get; set; }
 
         [XmlAttribute("ISACTIVE")]
-        public byte IsActive { get; set; }
+        public int IsActive { get; set; }
     }
 }

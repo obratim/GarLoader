@@ -25,10 +25,10 @@ namespace GarLoader.Engine
         public string TypeName { get; set; }
 
         [XmlAttribute("LEVEL")]
-        public long Level { get; set; }
+        public int Level { get; set; }
 
         [XmlAttribute("OPERTYPEID")]
-        public int? ObjectTypeId { get; set; }
+        public int OperationTypeId { get; set; }
 
         [XmlAttribute("PREVID")]
         public long? PrevId { get; set; }
@@ -46,9 +46,9 @@ namespace GarLoader.Engine
         public DateTime EndDate { get; set; }
 
         [XmlAttribute("ISACTUAL")]
-        public bool IsActual { get; set; }
+        public int IsActual { get; set; }
 
         [XmlAttribute("ISACTIVE")]
-        public bool IsActive { get; set; }
+        public int IsActive { get; set; }
     }
 }
