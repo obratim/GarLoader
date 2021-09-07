@@ -10,7 +10,7 @@ namespace GarLoader.Engine
 		//void PutHouseIntsChanges(string entryName, IEnumerable<FiasTypes.HouseInterval> houseIntervals);
 		//void PutLandmarksChanges(string entryName, IEnumerable<FiasTypes.Landmark> landmarks);
 
-		public void InsertAddressObjectTypes(IEnumerable<AddressObjectType> items);
+		void InsertAddressObjectItems<T>(IEnumerable<T> items);
 		
 		void UpdateDb(
 			int updateId,

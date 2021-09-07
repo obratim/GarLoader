@@ -119,17 +119,22 @@ namespace GarLoader.Engine
 			
 			using var archiveFile = System.IO.File.OpenRead(_updaterConfiguration.GarFullPath);
 			using var arch = new System.IO.Compression.ZipArchive(archiveFile);
-			var entryAddressObjectType = arch.Entries.FirstOrDefault(e => e.FullName.StartsWith("AS_ADDR_OBJ_TYPES_"));
-			if (entryAddressObjectType == null)
-				_logger.LogWarning("Отсутствуют справочные данные по типам адресных объектов");
-			else
-			{
-				//var objectTypes = AddressObjectTypes.Deserialize(entryAddressObjectType.Open());
-				using var stream = entryAddressObjectType.Open();
-				//var objectTypes = GetObjectsFromXmlReader<AddressObjectType>(stream).ToArray();
-				//_uploader.
-				_uploader.InsertAddressObjectTypes(GetObjectsFromXmlReader<AddressObjectType>(stream));
-			}
+			//var entryAddressObjectType = arch.Entries.FirstOrDefault(e => e.FullName.StartsWith("AS_ADDR_OBJ_TYPES_"));
+			//if (entryAddressObjectType == null)
+			//	_logger.LogWarning("Отсутствуют справочные данные по типам адресных объектов");
+			//else
+			//{
+			//	//var objectTypes = AddressObjectTypes.Deserialize(entryAddressObjectType.Open());
+			//	using var stream = entryAddressObjectType.Open();
+			//	//var objectTypes = GetObjectsFromXmlReader<AddressObjectType>(stream).ToArray();
+			//	//_uploader.
+			//	_uploader.InsertAddressObjectItems(GetObjectsFromXmlReader<AddressObjectType>(stream));
+			//}
+
+			LoadGlobalEntry<AddressObjectType>(arch, "AS_ADDR_OBJ_TYPES_");
+			LoadGlobalEntry<ObjectLevel>(arch, "AS_OBJECT_LEVELS_");
+			LoadGlobalEntry<OperationType>(arch, "AS_OPERATION_TYPES_");
+			LoadGlobalEntry<ParamType>(arch, "AS_PARAM_TYPES_");
 
 			/*using (var arch = SharpCompress.Archives.Rar.RarArchive.Open(archPath))
 			{
@@ -248,7 +253,6 @@ namespace GarLoader.Engine
 		}
 
 		private static IEnumerable<T> GetObjectsFromXmlReader<T>(System.IO.Stream entry)
-			where T : class
 		{
 			using (var xr = XmlReader.Create(entry, Helpers.XmlSettings))
 			{
@@ -285,5 +289,20 @@ namespace GarLoader.Engine
 		{
 			return await Downloads().ToListAsync();
 		}
+
+		private void LoadGlobalEntry<T>(System.IO.Compression.ZipArchive arch, string entryBeginingSubname)
+		{
+			var entry = arch.Entries.FirstOrDefault(e => e.FullName.StartsWith(entryBeginingSubname));
+			if (entry == null)
+			{
+				_logger.LogWarning("Отсутствуют справочные данные " + entryBeginingSubname);
+				return;
+			}
+			using var stream = entry.Open();
+			_uploader.InsertAddressObjectItems(GetObjectsFromXmlReader<T>(stream));
+		}
+
+		private void LoadRegionEntry<T>(System.IO.Compression.ZipArchive archive, string entryBeginingSubname)
+		{}
 	}
 }
