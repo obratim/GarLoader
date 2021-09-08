@@ -40,6 +40,12 @@ namespace GarLoader.MySqlUploader
                 .ParseArguments<CmdOptions>(args)
                 .MapResult(o => (true, new UpdaterConfiguration {
                     GarFullPath = o.GarFilePath,
+                    ConnectionString = o.ConnectionString,
+                    ServiceUri = o.FiasServiceUrl,
+                    RegionsCount = o.RegionsCount,
+                    ArchivesDirectory = o.ArchivesDirectory,
+                    ArchiveDownloadTimeout = TimeSpan.FromSeconds(o.ArchiveDownloadTimeout),
+                    DbExecuteTimeout = TimeSpan.FromSeconds(o.DbExecuteTimeout),
                 }, default(IEnumerable<Error>)),
                 errors => (false, default, errors));
             if (!config.Item1)
@@ -66,8 +72,26 @@ namespace GarLoader.MySqlUploader
 
     class CmdOptions
     {
+        [Option('u', "url", HelpText = "Адрес сервиса ФИАС с версиями файлов, доступных для скачивания")]
+        public string FiasServiceUrl { get; set; }
+
+        [Option('c', "conn", HelpText = "Строка подключения к БД")]
+        public string ConnectionString { get; set; }
+
         [Option('f', "filepath", HelpText = "Путь к архиву ГАР")]
         public string GarFilePath { get; set; }
+
+        [Option('a', "archdir", HelpText = "Полный путь к директории для сохранения загруженных архивов")]
+        public string ArchivesDirectory { get; set; }
+
+        [Option('r', "regions", HelpText = "Максимальный номер региона (по-умолчанию 99)")]
+        public int RegionsCount { get; set; }
+
+        [Option('T', "archivetimeout", HelpText = "Таймаут скачивания архива в секундах")]
+        public int ArchiveDownloadTimeout { get; set; }
+        
+        [Option('t', "dbtimeout", HelpText = "Таймаут выполнения запросов к БД в секундах")]
+        public int DbExecuteTimeout { get; set; }
 
         public static IEnumerable<KeyValuePair<PropertyDescriptor, OptionAttribute>> CmdArguments
             =>
