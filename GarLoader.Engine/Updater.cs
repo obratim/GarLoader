@@ -82,7 +82,7 @@ namespace GarLoader.Engine
 			}
 			catch (Exception e)
 			{
-				_logger.LogError("Не удалось выполнить обновление", e);
+				_logger.LogError(e, "Не удалось выполнить обновление");
 			}
 			finally
 			{
