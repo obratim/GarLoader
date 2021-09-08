@@ -170,8 +170,8 @@ INSERT INTO param_type (id, name, code, description, update_date, start_date, en
                     
                 sw.Exec(
                     @"
-INSERT INTO address_object (id, object_id, object_guid, change_id, name, type_name, level, operation_type_id, prev_id, next_id, update_date, start_date, end_date) VALUES
-(@id, @obj_id, @obj_guid, @change_id, @name, @type_name, @level, @oper_type, @prev_id, @next_id, @ud, @sd, @ed)",
+INSERT INTO address_object (id, object_id, object_guid, change_id, name, region, type_name, level, operation_type_id, prev_id, next_id, update_date, start_date, end_date) VALUES
+(@id, @obj_id, @obj_guid, @change_id, @name, @region, @type_name, @level, @oper_type, @prev_id, @next_id, @ud, @sd, @ed)",
                     new SwParameters
                     {
                         { "id", item.Id },
@@ -179,6 +179,7 @@ INSERT INTO address_object (id, object_id, object_guid, change_id, name, type_na
                         { "obj_guid", item.ObjectGuid },
                         { "change_id", item.ChangedTransactionId },
                         { "name", item.Name },
+                        { "region", item.Region },
                         { "type_name", item.TypeName },
                         { "level", item.Level },
                         { "oper_type", item.OperationTypeId },
