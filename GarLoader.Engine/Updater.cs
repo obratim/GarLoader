@@ -131,10 +131,19 @@ namespace GarLoader.Engine
 			//	_uploader.InsertAddressObjectItems(GetObjectsFromXmlReader<AddressObjectType>(stream));
 			//}
 
+			_logger.LogInformation("Вставка данных ...");
+
 			LoadGlobalEntry<AddressObjectType>(arch, "AS_ADDR_OBJ_TYPES_");
 			LoadGlobalEntry<ObjectLevel>(arch, "AS_OBJECT_LEVELS_");
 			LoadGlobalEntry<OperationType>(arch, "AS_OPERATION_TYPES_");
 			LoadGlobalEntry<ParamType>(arch, "AS_PARAM_TYPES_");
+
+			_logger.LogInformation("Справочные данные загружены");
+
+			LoadRegionEntry<AddressObject>(arch, "AS_ADDR_OBJ_", (item, region) => { item.Region = region; return item; });
+			LoadRegionEntry<Parameter>(arch, "AS_ADDR_OBJ_PARAMS_");
+			LoadRegionEntry<AdministrativeHierarchyItem>(arch, "AS_ADM_HIERARCHY_");
+			LoadRegionEntry<MunicipalHierarchyItem>(arch, "AS_MUN_HIERARCHY_");
 
 			/*using (var arch = SharpCompress.Archives.Rar.RarArchive.Open(archPath))
 			{
