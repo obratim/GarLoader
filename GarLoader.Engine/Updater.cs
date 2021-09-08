@@ -252,7 +252,7 @@ namespace GarLoader.Engine
 			_logger.Debug("Архив с данными удалён");*/
 		}
 
-		private static IEnumerable<T> GetObjectsFromXmlReader<T>(System.IO.Stream entry)
+		private static IEnumerable<T> GetObjectsFromXmlReader<T>(System.IO.Stream entry, Func<T, T> prepareItem = null)
 		{
 			using (var xr = XmlReader.Create(entry, Helpers.XmlSettings))
 			{
@@ -268,7 +268,8 @@ namespace GarLoader.Engine
 					while (true)
 					{
 						if (!(xr.NodeType == XmlNodeType.Element && xr.Name == name)) break;
-					    if (serializer.Deserialize(xr) is T value) yield return value;
+					    if (serializer.Deserialize(xr) is T value)
+							yield return prepareItem == null ? value : prepareItem(value);
 						else break;
 					}
 				}
@@ -290,7 +291,7 @@ namespace GarLoader.Engine
 			return await Downloads().ToListAsync();
 		}
 
-		private void LoadGlobalEntry<T>(System.IO.Compression.ZipArchive arch, string entryBeginingSubname)
+		private void LoadGlobalEntry<T>(System.IO.Compression.ZipArchive arch, string entryBeginingSubname, Func<T, T> prepareItem = null)
 		{
 			var entry = arch.Entries.FirstOrDefault(e => e.FullName.StartsWith(entryBeginingSubname));
 			if (entry == null)
@@ -299,10 +300,17 @@ namespace GarLoader.Engine
 				return;
 			}
 			using var stream = entry.Open();
-			_uploader.InsertAddressObjectItems(GetObjectsFromXmlReader<T>(stream));
+			_uploader.InsertAddressObjectItems(GetObjectsFromXmlReader<T>(stream, prepareItem));
 		}
 
-		private void LoadRegionEntry<T>(System.IO.Compression.ZipArchive archive, string entryBeginingSubname)
-		{}
+		private void LoadRegionEntry<T>(System.IO.Compression.ZipArchive archive, string entryBeginingSubname, Func<T, int, T> prepareItem = null)
+		{
+			for (var i = 1; i <= _updaterConfiguration.RegionsCountValue; ++i)
+			{
+				_logger.LogInformation($"Вставка объектов {entryBeginingSubname} по региону {i}...");
+				Func<T, T> converter = prepareItem == null ? null : (x => prepareItem(x, i));
+				LoadGlobalEntry<T>(archive, $"{i:00}/{entryBeginingSubname}", converter);
+			}
+		}
 	}
 }

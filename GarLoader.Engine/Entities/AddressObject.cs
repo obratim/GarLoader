@@ -9,6 +9,9 @@ namespace GarLoader.Engine
         [XmlAttribute("ID")]
         public long Id { get; set; }
 
+        [XmlIgnore]
+        public int? Region { get; set; }
+
         [XmlAttribute("OBJECTID")]
         public long ObjectId { get; set; }
 

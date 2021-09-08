@@ -8,6 +8,7 @@ namespace GarLoader.Engine
     {
         public string ConnectionString { get; set; }
         public string ServiceUri { get; set; }
+        public int? RegionsCount { get; set; }
         public string ArchivesDirectory { get; set; }
         public string RegionNumber { get; set; }
         public TimeSpan? ArchiveDownloadTimeout { get; set; }
@@ -15,6 +16,7 @@ namespace GarLoader.Engine
         
         public TimeSpan ArchiveDownloadTimeoutValue => ArchiveDownloadTimeout ?? TimeSpan.FromHours(12);
         public TimeSpan DbExecuteTimeoutValue => DbExecuteTimeout ?? TimeSpan.FromSeconds(900);
+        public int RegionsCountValue => RegionsCount ?? 99;
 
         public string GarFullPath { get; set; }
 
@@ -29,6 +31,7 @@ namespace GarLoader.Engine
                     ArchiveDownloadTimeout = this.ArchiveDownloadTimeout ?? basicConfiguration.ArchiveDownloadTimeout ?? TimeSpan.FromHours(12),
                     DbExecuteTimeout = this.DbExecuteTimeout ?? basicConfiguration.DbExecuteTimeout ?? TimeSpan.FromSeconds(900),
                     GarFullPath = this.GarFullPath ?? basicConfiguration.GarFullPath,
+                    RegionsCount = this.RegionsCount ?? basicConfiguration.RegionsCountValue,
                 };
     }
 }
