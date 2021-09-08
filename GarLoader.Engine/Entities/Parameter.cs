@@ -13,10 +13,12 @@ namespace GarLoader.Engine
         public long ObjectId { get; set; }
 
         [XmlAttribute("CHANGEID")]
-        public long? ChangeTransactionId { get; set; }
+        public string ChangeTransactionIdRaw { get; set; }
+        [XmlIgnore] public long? ChangeTransactionId => long.TryParse(ChangeTransactionIdRaw, out var parsed) ? parsed : null;
 
         [XmlAttribute("CHANGEIDEND")]
-        public long? ChangeTransactionIdEnd { get; set; }
+        public string ChangeTransactionIdEndRaw { get; set; }
+        [XmlIgnore] public long? ChangeTransactionIdEnd => long.TryParse(ChangeTransactionIdEndRaw, out var parsed) ? parsed : null;
         
         [XmlAttribute("TYPEID")]
         public int TypeId { get; set; }

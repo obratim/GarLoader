@@ -31,10 +31,12 @@ namespace GarLoader.Engine
         public int OperationTypeId { get; set; }
 
         [XmlAttribute("PREVID")]
-        public long? PrevId { get; set; }
+        public string PrevIdRaw { get; set; }
+        [XmlIgnore] public long? PrevId => long.TryParse(PrevIdRaw, out var parsed) ? parsed : null;
 
         [XmlAttribute("NEXTID")]
-        public long? NextId { get; set; }
+        public string NextIdRaw { get; set; }
+        [XmlIgnore] public long? NextId => long.TryParse(NextIdRaw, out var parsed) ? parsed : null;
 
         [XmlAttribute("UPDATEDATE")]
         public DateTime UpdateDate { get; set; }

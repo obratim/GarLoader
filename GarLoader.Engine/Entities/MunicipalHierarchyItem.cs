@@ -13,17 +13,20 @@ namespace GarLoader.Engine
         public long ObjectId { get; set; }
 
         [XmlAttribute("PARENTOBJID")]
-        public long? ParentObjectId { get; set; }
+        public string ParentObjectIdRaw { get; set; }
+        [XmlIgnore] public long? ParentObjectId => long.TryParse(ParentObjectIdRaw, out var parsed) ? parsed : null;
 
         [XmlAttribute("CHANGEID")]
         public long ChangeTransactionId { get; set; }
 
         [XmlAttribute("OKTMO")]
         public string OKTMO { get; set; }
-        public long? PrevId { get; set; }
+        public string PrevIdRaw { get; set; }
+        [XmlIgnore] public long? PrevId => long.TryParse(PrevIdRaw, out var parsed) ? parsed : null;
 
         [XmlAttribute("NEXTID")]
-        public long? NextId { get; set; }
+        public string NextIdRaw { get; set; }
+        [XmlIgnore] public long? NextId => long.TryParse(NextIdRaw, out var parsed) ? parsed : null;
 
         [XmlAttribute("UPDATEDATE")]
         public DateTime UpdateDate { get; set; }

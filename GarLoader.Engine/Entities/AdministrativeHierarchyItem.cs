@@ -13,34 +13,43 @@ namespace GarLoader.Engine
         public long ObjectId { get; set; }
 
         [XmlAttribute("PARENTOBJID")]
-        public long? ParentObjectId { get; set; }
+        public string ParentObjectIdRaw { get; set; }
+        [XmlIgnore] public long? ParentObjectId => long.TryParse(ParentObjectIdRaw, out var parsed) ? parsed : null;
 
         [XmlAttribute("CHANGEID")]
         public long ChangeTransactionId { get; set; }
 
         [XmlAttribute("REGIONCODE")]
-        public int? RegionCode { get; set; }
+        public string RegionCodeRaw { get; set; }
+        [XmlIgnore] public int? RegionCode => int.TryParse(RegionCodeRaw, out var parsed) ? parsed : null;
 
         [XmlAttribute("AREACODE")]
-        public int? AreaCode { get; set; }
+        public string AreaCodeRaw { get; set; }
+        [XmlIgnore] public int? AreaCode => int.TryParse(AreaCodeRaw, out var parsed) ? parsed : null;
 
         [XmlAttribute("CITYCODE")]
-        public int? CityCode { get; set; }
+        public string CityCodeRaw { get; set; }
+        [XmlIgnore] public int? CityCode => int.TryParse(CityCodeRaw, out var parsed) ? parsed : null;
 
         [XmlAttribute("PLACECODE")]
-        public int? PlaceCode { get; set; }
+        public string PlaceCodeRaw { get; set; }
+        [XmlIgnore] public int? PlaceCode => int.TryParse(PlaceCodeRaw, out var parsed) ? parsed : null;
 
         [XmlAttribute("PLANCODE")]
-        public int? PlanCode { get; set; }
+        public string PlanCodeRaw { get; set; }
+        [XmlIgnore] public int? PlanCode => int.TryParse(PlanCodeRaw, out var parsed) ? parsed : null;
 
         [XmlAttribute("STREETCODE")]
-        public int? StreetCode { get; set; }
+        public string StreetCodeRaw { get; set; }
+        [XmlIgnore] public int? StreetCode => int.TryParse(StreetCodeRaw, out var parsed) ? parsed : null;
 
         [XmlAttribute("PREVID")]
-        public long? PrevId { get; set; }
+        public string PrevIdRaw { get; set; }
+        [XmlIgnore] public long? PrevId => long.TryParse(PrevIdRaw, out var parsed) ? parsed : null;
 
         [XmlAttribute("NEXTID")]
-        public long? NextId { get; set; }
+        public string NextIdRaw { get; set; }
+        [XmlIgnore] public long? NextId => long.TryParse(NextIdRaw, out var parsed) ? parsed : null;
 
         [XmlAttribute("UPDATEDATE")]
         public DateTime UpdateDate { get; set; }
