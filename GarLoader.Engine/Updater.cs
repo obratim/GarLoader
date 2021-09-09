@@ -263,6 +263,7 @@ namespace GarLoader.Engine
 
 		private static IEnumerable<T> GetObjectsFromXmlReader<T>(System.IO.Stream entry, Func<T, T> prepareItem = null)
 		{
+			prepareItem ??= (x => x);
 			using (var xr = XmlReader.Create(entry, Helpers.XmlSettings))
 			{
 				var serializer = new System.Xml.Serialization.XmlSerializer(typeof(T));
@@ -278,7 +279,7 @@ namespace GarLoader.Engine
 					{
 						if (!(xr.NodeType == XmlNodeType.Element && xr.Name == name)) break;
 					    if (serializer.Deserialize(xr) is T value)
-							yield return prepareItem == null ? value : prepareItem(value);
+							yield return prepareItem(value);
 						else break;
 					}
 				}
