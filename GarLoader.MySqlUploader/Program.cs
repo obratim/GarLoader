@@ -44,8 +44,8 @@ namespace GarLoader.MySqlUploader
                     ServiceUri = o.FiasServiceUrl,
                     RegionsCount = o.RegionsCount,
                     ArchivesDirectory = o.ArchivesDirectory,
-                    ArchiveDownloadTimeout = TimeSpan.FromSeconds(o.ArchiveDownloadTimeout),
-                    DbExecuteTimeout = TimeSpan.FromSeconds(o.DbExecuteTimeout),
+                    ArchiveDownloadTimeout = o.ArchiveDownloadTimeout.HasValue ? TimeSpan.FromSeconds(o.ArchiveDownloadTimeout.Value) : null,
+                    DbExecuteTimeout = o.DbExecuteTimeout.HasValue ? TimeSpan.FromSeconds(o.DbExecuteTimeout.Value) : null,
                 }, default(IEnumerable<Error>)),
                 errors => (false, default, errors));
             if (!config.Item1)
@@ -85,13 +85,13 @@ namespace GarLoader.MySqlUploader
         public string ArchivesDirectory { get; set; }
 
         [Option('r', "regions", HelpText = "Максимальный номер региона (по-умолчанию 99)")]
-        public int RegionsCount { get; set; }
+        public int? RegionsCount { get; set; }
 
         [Option('T', "archivetimeout", HelpText = "Таймаут скачивания архива в секундах")]
-        public int ArchiveDownloadTimeout { get; set; }
+        public int? ArchiveDownloadTimeout { get; set; }
         
         [Option('t', "dbtimeout", HelpText = "Таймаут выполнения запросов к БД в секундах")]
-        public int DbExecuteTimeout { get; set; }
+        public int? DbExecuteTimeout { get; set; }
 
         public static IEnumerable<KeyValuePair<PropertyDescriptor, OptionAttribute>> CmdArguments
             =>
