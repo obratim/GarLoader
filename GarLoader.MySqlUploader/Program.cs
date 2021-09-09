@@ -58,6 +58,14 @@ namespace GarLoader.MySqlUploader
                 .CreateDefaultBuilder(args)
                 .ConfigureServices((hostContext, services) =>
                 {
+                    services.AddLogging(options =>
+                    {
+                        options.AddSimpleConsole(c =>
+                        {
+                            c.TimestampFormat = "[yyyy-MM-dd HH:mm:ss] ";
+                            c.UseUtcTimestamp = false;
+                        });
+                    });
                     services.AddSingleton<IUploader, UploaderToMySql>();
                     services
                         .AddOptions<UpdaterConfiguration>()
