@@ -140,7 +140,7 @@ namespace GarLoader.Engine
 
 			_logger.LogInformation("Справочные данные загружены");
 
-			LoadRegionEntry<AddressObject>(arch, "AS_ADDR_OBJ_", (item, region) => { item.Region = region; return item; });
+			LoadRegionEntryInParallel<AddressObject>(_updaterConfiguration.GarFullPath, "AS_ADDR_OBJ_", (item, region) => { item.Region = region; return item; });
 			LoadRegionEntry<Parameter>(arch, "AS_ADDR_OBJ_PARAMS_");
 			LoadRegionEntry<AdministrativeHierarchyItem>(arch, "AS_ADM_HIERARCHY_");
 			LoadRegionEntry<MunicipalHierarchyItem>(arch, "AS_MUN_HIERARCHY_");
@@ -321,6 +321,20 @@ namespace GarLoader.Engine
 				Func<T, T> converter = prepareItem == null ? null : (x => prepareItem(x, i));
 				LoadGlobalEntry<T>(archive, $"{i:00}/{entryBeginingSubname}", converter);
 			}
+		}
+
+		private void LoadRegionEntryInParallel<T>(string archivePath, string entryBeginingSubname, Func<T, int, T> prepareItem = null)
+		{
+			Enumerable
+				.Range(1, _updaterConfiguration.RegionsCountValue)
+				.AsParallel()
+				.ForAll(i => {
+					using var archiveFile = System.IO.File.OpenRead(_updaterConfiguration.GarFullPath);
+					using var arch = new System.IO.Compression.ZipArchive(archiveFile);
+					Func<T, T> converter = prepareItem == null ? null : (x => prepareItem(x, i));
+					LoadGlobalEntry<T>(arch, $"{i:00}/{entryBeginingSubname}", converter);
+					_logger.LogInformation($"Вставлены данные из объектов {entryBeginingSubname} по региону {i}");
+				});
 		}
 	}
 }
