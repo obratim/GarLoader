@@ -141,9 +141,9 @@ namespace GarLoader.Engine
 			_logger.LogInformation("Справочные данные загружены");
 
 			LoadRegionEntryInParallel<AddressObject>(_updaterConfiguration.GarFullPath, "AS_ADDR_OBJ_", (item, region) => { item.Region = region; return item; });
-			LoadRegionEntry<Parameter>(arch, "AS_ADDR_OBJ_PARAMS_");
-			LoadRegionEntry<AdministrativeHierarchyItem>(arch, "AS_ADM_HIERARCHY_");
-			LoadRegionEntry<MunicipalHierarchyItem>(arch, "AS_MUN_HIERARCHY_");
+			LoadRegionEntryInParallel<Parameter>(_updaterConfiguration.GarFullPath, "AS_ADDR_OBJ_PARAMS_");
+			LoadRegionEntryInParallel<AdministrativeHierarchyItem>(_updaterConfiguration.GarFullPath, "AS_ADM_HIERARCHY_");
+			LoadRegionEntryInParallel<MunicipalHierarchyItem>(_updaterConfiguration.GarFullPath, "AS_MUN_HIERARCHY_");
 
 			/*using (var arch = SharpCompress.Archives.Rar.RarArchive.Open(archPath))
 			{
