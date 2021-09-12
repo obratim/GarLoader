@@ -65,9 +65,6 @@ namespace GarLoader.MySqlUploader
             using var sw = new MySqlWorker(connectionString);
             foreach (var item in (IEnumerable<AddressObjectType>)items)
             {
-                if (!item.IsActive || item.StartDate > Now || item.EndDate < Now)
-                    continue;
-
                 sw.Exec(
                     @"
 INSERT INTO address_object_type (id, level, shortname, name, description, update_date, start_date, end_date) VALUES
@@ -90,10 +87,7 @@ INSERT INTO address_object_type (id, level, shortname, name, description, update
         {
             using var sw = new MySqlWorker(connectionString);
             foreach (var item in (IEnumerable<ObjectLevel>)items)
-            {
-                if (!item.IsActive || item.StartDate > Now || item.EndDate < Now)
-                    continue;
-                    
+            {       
                 sw.Exec(
                     @"
 INSERT INTO object_level (level, name, shortname, update_date, start_date, end_date) VALUES
@@ -114,10 +108,7 @@ INSERT INTO object_level (level, name, shortname, update_date, start_date, end_d
         {
             using var sw = new MySqlWorker(connectionString);
             foreach (var item in (IEnumerable<OperationType>)items)
-            {
-                if (!item.IsActive || item.StartDate > Now || item.EndDate < Now)
-                    continue;
-                    
+            {       
                 sw.Exec(
                     @"
 INSERT INTO operation_type (id, name, shortname, description, update_date, start_date, end_date) VALUES
@@ -139,10 +130,7 @@ INSERT INTO operation_type (id, name, shortname, description, update_date, start
         {
             using var sw = new MySqlWorker(connectionString);
             foreach (var item in (IEnumerable<ParamType>)items)
-            {
-                if (!item.IsActive || item.StartDate > Now || item.EndDate < Now)
-                    continue;
-                    
+            {       
                 sw.Exec(
                     @"
 INSERT INTO param_type (id, name, code, description, update_date, start_date, end_date) VALUES
