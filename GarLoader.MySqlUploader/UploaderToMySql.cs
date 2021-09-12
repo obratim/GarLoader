@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using GarLoader.Engine;
 using SqlWorker;
@@ -43,10 +44,10 @@ namespace GarLoader.MySqlUploader
                 {} when typeof(T) == typeof(ObjectLevel) => InsertObjectLevels,
                 {} when typeof(T) == typeof(OperationType) => InsertOperationType,
                 {} when typeof(T) == typeof(ParamType) => InsertParamTypes,
-                {} when typeof(T) == typeof(AddressObject) => InsertAddressObjects,
-                {} when typeof(T) == typeof(Parameter) => InsertAddressObjectParameters,
-                {} when typeof(T) == typeof(AdministrativeHierarchyItem) => InsertAdministrativeHierarchy,
-                {} when typeof(T) == typeof(MunicipalHierarchyItem) => InsertMunicipalHierarchy,
+                {} when typeof(T) == typeof(AddressObject) => BulkInsertAddressObjects,
+                {} when typeof(T) == typeof(Parameter) => BulkInsertAddressObjectParameters,
+                {} when typeof(T) == typeof(AdministrativeHierarchyItem) => BulkInsertAdministrativeHierarchy,
+                {} when typeof(T) == typeof(MunicipalHierarchyItem) => BulkInsertMunicipalHierarchy,
                 _ => null,
             };
         }
@@ -343,6 +344,91 @@ INSERT INTO municipal_hierarchy (id, object_id, parent_object_id, change_id, okt
                     });
             }
         }
+
+        private static void BulkInsertAddressObjects(string connectionString, IEnumerable<T> items)
+            =>
+                GenericInsertBulk(
+                    connectionString,
+                    ((IEnumerable<AddressObject>)items).Where(item => item.IsActive == 1 && item.IsActual == 1 && item.StartDate <= Now && item.EndDate >= Now),
+                    "address_object",
+                    new (string, Func<AddressObject, object>)[] {
+                        ("id", x => x.Id),
+                        ("object_id", x => x.ObjectId),
+                        ("object_guid", x => x.ObjectGuid.ToString()),
+                        ("change_id", x => x.ChangedTransactionId),
+                        ("name", x => x.Name ?? "<NULL>"),
+                        ("region", x => x.Region),
+                        ("type_name", x => x.TypeName),
+                        ("level", x => x.Level),
+                        ("operation_type_id", x => x.OperationTypeId),
+                        ("prev_id", x => x.PrevId),
+                        ("next_id", x => x.NextId),
+                        ("update_date", x => x.UpdateDate),
+                        ("start_date", x => x.StartDate),
+                        ("end_date", x => x.EndDate),
+                    });
+        
+        private static void BulkInsertAddressObjectParameters(string connectionString, IEnumerable<T> items)
+            =>
+                GenericInsertBulk(
+                    connectionString,
+                    ((IEnumerable<Parameter>)items).Where(item => !(item.StartDate > Now || item.EndDate < Now)),
+                    "address_object_param",
+                    new (string, Func<Parameter, object>)[] {
+                        ("id", x => x.Id),
+                        ("object_id", x => x.ObjectId),
+                        ("change_id", x => x.ChangeTransactionId),
+                        ("change_id_end", x => x.ChangeTransactionIdEnd),
+                        ("type_id", x => x.TypeId),
+                        ("value", x => x.Value),
+                        ("update_date", x => x.UpdateDate),
+                        ("start_date", x => x.StartDate),
+                        ("end_date", x => x.EndDate),
+                    }
+                );
+        private static void BulkInsertAdministrativeHierarchy(string connectionString, IEnumerable<T> items)
+            =>
+                GenericInsertBulk(
+                    connectionString,
+                    ((IEnumerable<AdministrativeHierarchyItem>)items).Where(item => !(item.IsActive != 1 || item.StartDate > Now || item.EndDate < Now)),
+                    "administrative_hierarchy",
+                    new (string, Func<AdministrativeHierarchyItem, object>)[] {
+                        ("id", x => x.Id),
+                        ("object_id", x => x.ObjectId),
+                        ("parent_object_id", x => x.ParentObjectId),
+                        ("change_id", x => x.ChangeTransactionId),
+                        ("region_code", x => x.RegionCode),
+                        ("area_code", x => x.AreaCode),
+                        ("city_code", x => x.CityCode),
+                        ("place_code", x => x.PlaceCode),
+                        ("plan_code", x => x.PlanCode),
+                        ("street_code", x => x.StreetCode),
+                        ("prev_id", x => x.PrevId),
+                        ("next_id", x => x.NextId),
+                        ("update_date", x => x.UpdateDate),
+                        ("start_date", x => x.StartDate),
+                        ("end_date", x => x.EndDate),
+                    }
+                );
+        private static void BulkInsertMunicipalHierarchy(string connectionString, IEnumerable<T> items)
+            =>
+                GenericInsertBulk(
+                    connectionString,
+                    ((IEnumerable<MunicipalHierarchyItem>)items).Where(item => !(item.IsActive != 1 || item.StartDate > Now || item.EndDate < Now)),
+                    "municipal_hierarchy",
+                    new (string, Func<MunicipalHierarchyItem, object>)[] {
+                        ("id", x => x.Id),
+                        ("object_id", x => x.ObjectId),
+                        ("parent_object_id", x => x.ParentObjectId),
+                        ("change_id", x => x.ChangeTransactionId),
+                        ("oktmo", x => x.OKTMO),
+                        ("prev_id", x => x.PrevId),
+                        ("next_id", x => x.NextId),
+                        ("update_date", x => x.UpdateDate),
+                        ("start_date", x => x.StartDate),
+                        ("end_date", x => x.EndDate),
+                    }
+                );
 
 
     }
