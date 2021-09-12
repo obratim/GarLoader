@@ -159,6 +159,70 @@ INSERT INTO param_type (id, name, code, description, update_date, start_date, en
             }
         }
 
+        private static string PrepareInsertStatement<TT>(string tableName, ICollection<(string name, Func<TT, object> valueGetter)> fields, int rowsCount)
+        {
+            var sb = new StringBuilder(@"INSERT INTO ");
+            sb.Append(tableName);
+            sb.Append(" (");
+            var delimiter = "";
+            foreach (var column in fields)
+            {
+                sb.Append(delimiter);
+                delimiter = ", ";
+                sb.Append(column.name);
+            }
+            sb.Append(") VALUES ");
+            delimiter = "";
+            for (var i = 0; i < rowsCount; ++i)
+            {
+                sb.Append(delimiter);
+                delimiter = ", ";
+                sb.Append('(');
+                var tmpDelimiter = "";
+                foreach (var column in fields)
+                {
+                    sb.Append(tmpDelimiter);
+                    tmpDelimiter = ", ";
+                    sb.Append('@');
+                    sb.Append(column.name);
+                    sb.Append(i);
+                }
+                sb.Append(')');
+            }
+
+            return sb.ToString();
+        }
+
+        private static void GenericInsertBulk<TT>(string connectionString, IEnumerable<TT> items, string tableName, ICollection<(string name, Func<TT, object> valueGetter)> fields)
+        {
+            using var enumerator = items.GetEnumerator();
+            using var sw = new MySqlWorker(connectionString);
+            int i;
+            var parameters = new SwParameters();
+            const int bulkNumber = 50;
+            var insertCommand = PrepareInsertStatement(tableName, fields, bulkNumber);
+            do
+            {
+                parameters.Clear();
+                for (i = 0; i < bulkNumber; ++i)
+                {
+                    if (!enumerator.MoveNext())
+                        break;
+                    foreach (var column in fields)
+                    {
+                        parameters.Add($"{column.name}{i}", column.valueGetter(enumerator.Current));
+                    }
+                }
+
+                if (i == bulkNumber)
+                    sw.Exec(insertCommand, parameters);
+            }
+            while (i == bulkNumber);
+
+            if (i > 0)
+                sw.Exec(PrepareInsertStatement(tableName, fields, i), parameters);
+        }
+
 
         private static void InsertAddressObjects(string connectionString, IEnumerable<T> items)
         {
