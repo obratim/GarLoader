@@ -3,7 +3,7 @@
   <RuntimeVersion>5.0</RuntimeVersion>
 </Query>
 
-using var sw = new SqlWorker.MySqlWorker("Server=127.0.0.1;Port=3306;Database=gar;Uid=gar_user;Pwd=1234");
+using var sw = new SqlWorker.MySqlWorker("Server=127.0.0.1;Port=3307;Database=gar;Uid=gar_user;Pwd=1234");
 
 sw.Exec(@"DROP TABLE municipal_hierarchy");
 sw.Exec(@"DROP TABLE administrative_hierarchy");
@@ -84,7 +84,6 @@ CREATE TABLE address_object (
 	update_date DATE NOT NULL,
 	start_date DATE NOT NULL,
 	end_date DATE NOT NULL
-	-- region int NOT NULL
 	-- is_active BOOL NOT NULL
 );
 ");
@@ -92,10 +91,10 @@ CREATE TABLE address_object (
 sw.Exec(@"
 CREATE TABLE address_object_param (
 	id BIGINT NOT NULL PRIMARY KEY,
-	object_id BIGINT NOT NULL , -- REFERENCES address_object (object_id),
+	object_id BIGINT NOT NULL REFERENCES address_object (object_id),
 	change_id BIGINT NULL,
 	change_id_end BIGINT NOT NULL,
-	type_id INT NOT NULL , -- REFERENCES param_type (id),
+	type_id INT NOT NULL REFERENCES param_type (id),
 	value VARCHAR(8000) NOT NULL,
 	update_date DATE NOT NULL,
 	start_date DATE NOT NULL,
@@ -140,10 +139,10 @@ CREATE TABLE municipal_hierarchy (
 );
 ");
 
-sw.Exec(@"
-INSERT INTO object_level (level, name, shortname, update_date, start_date, end_date) VALUES
-(14, '<?unknown?>', NULL, '2021-09-09', '2021-09-09', '3999-01-01')
-");
+//sw.Exec(@"
+//INSERT INTO object_level (level, name, shortname, update_date, start_date, end_date) VALUES
+//(15, '<?unknown?>', NULL, '2021-09-09', '2021-09-09', '3999-01-01')
+//");
 
 
 "finished".Dump();
