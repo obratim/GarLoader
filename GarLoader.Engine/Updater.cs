@@ -60,6 +60,9 @@ namespace GarLoader.Engine
 				}
 				else
 					Update(default);
+				
+				if (_updaterConfiguration.DeleteArchiveFile)
+					System.IO.File.Delete(_updaterConfiguration.GarFullPath);
 			}
 			catch (Exception e)
 			{

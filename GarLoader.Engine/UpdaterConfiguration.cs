@@ -16,6 +16,8 @@ namespace GarLoader.Engine
         public TimeSpan ArchiveDownloadTimeoutValue => ArchiveDownloadTimeout ?? TimeSpan.FromHours(12);
         public TimeSpan DbExecuteTimeoutValue => DbExecuteTimeout ?? TimeSpan.FromSeconds(900);
         public int RegionsCountValue => RegionsCount ?? 99;
+        
+        public bool DeleteArchiveFile { get; set; }
 
         public string GarFullPath { get; set; }
 

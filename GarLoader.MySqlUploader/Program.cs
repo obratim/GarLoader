@@ -46,6 +46,7 @@ namespace GarLoader.MySqlUploader
                     ArchivesDirectory = o.ArchivesDirectory,
                     ArchiveDownloadTimeout = o.ArchiveDownloadTimeout.HasValue ? TimeSpan.FromSeconds(o.ArchiveDownloadTimeout.Value) : null,
                     DbExecuteTimeout = o.DbExecuteTimeout.HasValue ? TimeSpan.FromSeconds(o.DbExecuteTimeout.Value) : null,
+                    DeleteArchiveFile = o.DeleteArchiveFile,
                 }, default(IEnumerable<Error>)),
                 errors => (false, default, errors));
             if (!config.Item1)
@@ -100,6 +101,9 @@ namespace GarLoader.MySqlUploader
         
         [Option('t', "dbtimeout", HelpText = "Таймаут выполнения запросов к БД в секундах")]
         public int? DbExecuteTimeout { get; set; }
+
+        [Option('d', "delete", HelpText = "Удалить файл с архивом после загрузки")]
+        public bool DeleteArchiveFile { get; set; }
 
         public static IEnumerable<KeyValuePair<PropertyDescriptor, OptionAttribute>> CmdArguments
             =>
