@@ -23,10 +23,10 @@ namespace GarLoader.MySqlUploader
                 foreach (var argument in CmdOptions.CmdArguments)
                 {
                     Console.WriteLine(
-                        " {0} {1,-15} {2,-5} {3,-30}",
+                        " {0} -{2, -3} --{1,-25} {3,-30}",
                         argument.Value.Required ? '*' : ' ',
                         argument.Value.LongName,
-                        argument.Value.ShortName,
+                        argument.Value.ShortName + ",",
                         argument.Value.HelpText);
                 }
                 return;
