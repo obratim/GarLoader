@@ -11,7 +11,7 @@
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
             "program": "${workspaceFolder}/GarLoader.MySqlUploader/bin/Debug/net5.0/GarLoader.MySqlUploader.dll",
-            "args": [ "-f", "/home/obratim/devel/gar_fias/gar_xml_20210824.zip" ],
+            "args": [ "-f", "/home/obratim/devel/gar_fias/gar_xml_20210824.zip", "-c", "Server=127.0.0.1;Port=3307;Database=gar;Uid=gar_user;Pwd=1234" ],
             "cwd": "${workspaceFolder}/GarLoader.MySqlUploader",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "internalConsole",
