@@ -337,7 +337,7 @@ INSERT INTO municipal_hierarchy (id, object_id, parent_object_id, change_id, okt
             =>
                 GenericInsertBulk(
                     connectionString,
-                    ((IEnumerable<AddressObject>)items).Where(item => /*item.IsActive == 1 &&*/ item.IsActual == 1 && item.StartDate <= Now && item.EndDate >= Now),
+                    ((IEnumerable<AddressObject>)items),//.Where(item => /*item.IsActive == 1 &&*/ item.IsActual == 1 && item.StartDate <= Now && item.EndDate >= Now),
                     "address_object",
                     new (string, Func<AddressObject, object>)[] {
                         ("id", x => x.Id),
@@ -354,6 +354,8 @@ INSERT INTO municipal_hierarchy (id, object_id, parent_object_id, change_id, okt
                         ("update_date", x => x.UpdateDate),
                         ("start_date", x => x.StartDate),
                         ("end_date", x => x.EndDate),
+                        ("is_active", x => x.IsActive),
+                        ("is_actual", x => x.IsActual),
                     });
         
         private static void BulkInsertAddressObjectParameters(string connectionString, IEnumerable<T> items)
