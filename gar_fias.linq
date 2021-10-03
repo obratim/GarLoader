@@ -71,7 +71,7 @@ CREATE TABLE param_type (
 sw.Exec(@"
 CREATE TABLE address_object (
 	id BIGINT NOT NULL,
-	object_id BIGINT NOT NULL PRIMARY KEY,
+	object_id BIGINT NOT NULL, -- PRIMARY KEY,
 	object_guid CHAR(36) NOT NULL,
 	change_id BIGINT NOT NULL,
 	name VARCHAR(250) NOT NULL,
@@ -83,9 +83,15 @@ CREATE TABLE address_object (
 	next_id BIGINT NULL,
 	update_date DATE NOT NULL,
 	start_date DATE NOT NULL,
-	end_date DATE NOT NULL
-	-- is_active BOOL NOT NULL
+	end_date DATE NOT NULL,
+	is_active TINYINT NOT NULL,
+	is_actual TINYINT NOT NULL
 );
+");
+
+sw.Exec(@"
+CREATE INDEX IX_address_object_object_id
+ON address_object (object_id)
 ");
 
 sw.Exec(@"
