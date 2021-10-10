@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using GarLoader.Engine;
+using Microsoft.Extensions.Logging;
 using SqlWorker;
 
 namespace GarLoader.MySqlUploader
@@ -10,15 +11,53 @@ namespace GarLoader.MySqlUploader
     class UploaderToMySql : IUploader
     {
         private readonly UpdaterConfiguration _configuration;
+        private readonly Microsoft.Extensions.Logging.ILogger _logger;
 
-        public UploaderToMySql(UpdaterConfiguration configuration)
+        public UploaderToMySql(UpdaterConfiguration configuration, Microsoft.Extensions.Logging.ILogger<UploaderToMySql> logger)
         {
             _configuration = configuration;
+            _logger = logger;
         }
 
         public void CleanUp()
         {
-            //throw new NotImplementedException();
+            _logger.LogInformation("Завершение ...");
+            using var sw = new MySqlWorker(_configuration.ConnectionString);
+            sw.DefaultExecutionTimeout = 600_000;
+            _logger.LogInformation("Удаление неактульных записей из address_object_param...");
+            sw.Exec(@"
+            DELETE FROM address_object_param
+            WHERE EXISTS (
+                select '' from address_object a
+                where a.object_id = address_object_param.object_id and (a.is_active = 0 or a.is_actual = 0 or a.start_date > NOW() or a.end_date < NOW())
+            )
+            ");
+            _logger.LogInformation("Удаление неактульных записей из address_object_param завершено");
+            _logger.LogInformation("Удаление неактульных записей из administrative_hierarchy ...");
+            sw.Exec(@"
+            DELETE FROM administrative_hierarchy
+            WHERE EXISTS (
+                select '' from address_object a
+                where a.object_id = administrative_hierarchy.object_id and (a.is_active = 0 or a.is_actual = 0 or a.start_date > NOW() or a.end_date < NOW())
+            )
+            ");
+            _logger.LogInformation("Удаление неактульных записей из administrative_hierarchy завершено");
+            _logger.LogInformation("Удаление неактульных записей из municipal_hierarchy ...");
+            sw.Exec(@"
+            DELETE FROM municipal_hierarchy
+            WHERE EXISTS (
+                select '' from address_object a
+                where a.object_id = municipal_hierarchy.object_id and (a.is_active = 0 or a.is_actual = 0 or a.start_date > NOW() or a.end_date < NOW())
+            )
+            ");
+            _logger.LogInformation("Удаление неактульных записей из municipal_hierarchy завершено");
+            _logger.LogInformation("Удаление неактульных записей из address_object ...");
+            sw.Exec(@"
+            DELETE FROM address_object
+            WHERE is_active = 0 or is_actual = 0 or start_date > NOW() or end_date < NOW()
+            )
+            ");
+            _logger.LogInformation("Удаление неактульных записей из address_object завершено");
         }
 
         public void InsertAddressObjectItems<T>(IEnumerable<T> items)
@@ -250,6 +289,7 @@ INSERT INTO address_object (id, object_id, object_guid, change_id, name, region,
             using var sw = new MySqlWorker(connectionString);
             foreach (var item in (IEnumerable<Parameter>)items)
             {
+                try {
                 if (item.StartDate > Now || item.EndDate < Now)
                     continue;
                     
@@ -269,6 +309,10 @@ INSERT INTO address_object_param (id, object_id, change_id, change_id_end, type_
                         { "start_date", item.StartDate },
                         { "end_date", item.EndDate },
                     });
+                }
+                catch (Exception e)
+                {
+                }
             }
         }
 
