@@ -289,7 +289,6 @@ INSERT INTO address_object (id, object_id, object_guid, change_id, name, region,
             using var sw = new MySqlWorker(connectionString);
             foreach (var item in (IEnumerable<Parameter>)items)
             {
-                try {
                 if (item.StartDate > Now || item.EndDate < Now)
                     continue;
                     
@@ -309,10 +308,6 @@ INSERT INTO address_object_param (id, object_id, change_id, change_id_end, type_
                         { "start_date", item.StartDate },
                         { "end_date", item.EndDate },
                     });
-                }
-                catch (Exception e)
-                {
-                }
             }
         }
 
