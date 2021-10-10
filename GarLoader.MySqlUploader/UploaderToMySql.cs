@@ -55,7 +55,6 @@ namespace GarLoader.MySqlUploader
             sw.Exec(@"
             DELETE FROM address_object
             WHERE is_active = 0 or is_actual = 0 or start_date > NOW() or end_date < NOW()
-            )
             ");
             _logger.LogInformation("Удаление неактульных записей из address_object завершено");
         }
