@@ -115,6 +115,8 @@ namespace GarLoader.Engine
 			LoadRegionEntryInParallel<Parameter>(_updaterConfiguration.GarFullPath, "AS_ADDR_OBJ_PARAMS_");
 			LoadRegionEntryInParallel<AdministrativeHierarchyItem>(_updaterConfiguration.GarFullPath, "AS_ADM_HIERARCHY_");
 			LoadRegionEntryInParallel<MunicipalHierarchyItem>(_updaterConfiguration.GarFullPath, "AS_MUN_HIERARCHY_");
+
+			Complete();
 		}
 
 		private static IEnumerable<T> GetObjectsFromXmlReader<T>(System.IO.Stream entry, Func<T, T> prepareItem = null)
@@ -191,6 +193,11 @@ namespace GarLoader.Engine
 					LoadGlobalEntry<T>(arch, $"{i:00}/{entryBeginingSubname}", converter);
 					_logger.LogInformation($"Вставлены данные из объектов {entryBeginingSubname} по региону {i}");
 				});
+		}
+
+		private void Complete()
+		{
+			_uploader.CleanUp();
 		}
 	}
 }
