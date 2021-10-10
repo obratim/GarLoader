@@ -70,8 +70,7 @@ namespace GarLoader.Engine
 			}
 			finally
 			{
-				_logger.LogInformation("Завершение работы программы");
-				_uploader.CleanUp();
+				_logger.LogInformation("Загрузка завершена");
 			}
 		}
 		
