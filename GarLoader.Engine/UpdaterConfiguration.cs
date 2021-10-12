@@ -13,7 +13,7 @@ namespace GarLoader.Engine
         public TimeSpan? ArchiveDownloadTimeout { get; set; }
         public TimeSpan? DbExecuteTimeout { get; set; }
         
-        public TimeSpan ArchiveDownloadTimeoutValue => ArchiveDownloadTimeout ?? TimeSpan.FromHours(12);
+        public TimeSpan ArchiveDownloadTimeoutValue => ArchiveDownloadTimeout ?? TimeSpan.FromHours(2);
         public TimeSpan DbExecuteTimeoutValue => DbExecuteTimeout ?? TimeSpan.FromSeconds(900);
         public int RegionsCountValue => RegionsCount ?? 99;
         

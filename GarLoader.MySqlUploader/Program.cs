@@ -67,6 +67,7 @@ namespace GarLoader.MySqlUploader
                             c.UseUtcTimestamp = false;
                         });
                     });
+                    services.AddHttpClient();
                     services.AddSingleton<IUploader, UploaderToMySql>();
                     services
                         .AddOptions<UpdaterConfiguration>()

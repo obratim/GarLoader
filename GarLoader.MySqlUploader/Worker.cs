@@ -26,12 +26,7 @@ namespace GarLoader.MySqlUploader
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _updater.Update();
-            /*while (!stoppingToken.IsCancellationRequested)
-            {
-                _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
-                await Task.Delay(1000, stoppingToken);
-            }*/
+            await _updater.Update(stoppingToken);
             _lifetime.StopApplication();
         }
     }

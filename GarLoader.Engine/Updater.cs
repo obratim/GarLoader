@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using Microsoft.Extensions.Logging;
@@ -18,16 +21,19 @@ namespace GarLoader.Engine
 
 		private readonly UpdaterConfiguration _updaterConfiguration;
 
-        public Updater(IUploader uploader, ILogger<Updater> logger, UpdaterConfiguration updaterConfiguration)
+		private readonly IHttpClientFactory _httpFactory;
+
+        public Updater(IUploader uploader, ILogger<Updater> logger, UpdaterConfiguration updaterConfiguration, IHttpClientFactory httpClientFactory)
         {
             _uploader = uploader;
             _logger = logger;
             _updaterConfiguration = updaterConfiguration;
+			_httpFactory = httpClientFactory;
 
             _logger.LogInformation("Запущена программа обновления БД ФИАС");
         }
 
-        public void Update()
+        public async Task Update(System.Threading.CancellationToken token)
         {
 			try
 			{
@@ -56,10 +62,10 @@ namespace GarLoader.Engine
 
 					_logger.LogInformation("Самая актуальная версия для загрузки: " + System.Text.Json.JsonSerializer.Serialize(newestUpdate));
 
-					Update(newestUpdate);
+					await Update(newestUpdate, token);
 				}
 				else
-					Update(default);
+					await Update(default, token);
 				
 				if (_updaterConfiguration.DeleteArchiveFile)
 					System.IO.File.Delete(_updaterConfiguration.GarFullPath);
@@ -74,7 +80,7 @@ namespace GarLoader.Engine
 			}
 		}
 		
-		private void Update(DownloadFileInfo downloadFileInfo)
+		private async Task Update(DownloadFileInfo downloadFileInfo, System.Threading.CancellationToken c)
 		{
 			var processDt = DateTime.Now;
 
@@ -83,17 +89,67 @@ namespace GarLoader.Engine
 				_logger.LogInformation($"Загрузка обновления {downloadFileInfo.VersionId} ({downloadFileInfo.TextVersion})");
 
 				_logger.LogInformation($"Скачивание файла {downloadFileInfo.GarXMLFullURL} ...");
-				using (var client = new System.Net.WebClient())
-				{
-					_updaterConfiguration.GarFullPath = System.IO.Path.Combine(_updaterConfiguration.ArchivesDirectory, $"gar {downloadFileInfo.VersionId}.zip");
+				//using var client = new System.Net.WebClient();
+				using var client = _httpFactory.CreateClient();
+				client.Timeout = _updaterConfiguration.ArchiveDownloadTimeoutValue;
+				_updaterConfiguration.GarFullPath = System.IO.Path.Combine(_updaterConfiguration.ArchivesDirectory, $"gar {downloadFileInfo.VersionId}.zip");
 
-					var t = client.DownloadFileTaskAsync(
-						downloadFileInfo.GarXMLFullURL,
-						_updaterConfiguration.GarFullPath);
-					t.Wait(_updaterConfiguration.ArchiveDownloadTimeoutValue.Milliseconds);
-					if (!t.IsCompleted) throw new TimeoutException("Истекло время ожидания скачивания архива с данными");
-					_logger.LogInformation($"Загружено {(new System.IO.FileInfo(_updaterConfiguration.GarFullPath).Length / 1024.0 / 1024.0):0.00} МиБ");
-				}
+				await using var fileStream = System.IO.File.OpenWrite(_updaterConfiguration.GarFullPath);
+				//using var downloadTask = await client.GetAsync(downloadFileInfo.GarXMLFullURL, c);
+				using var downloadTask = await client.SendAsync(new HttpRequestMessage
+					{
+						Method = HttpMethod.Get,
+						RequestUri = new Uri(downloadFileInfo.GarXMLFullURL),
+					},
+					HttpCompletionOption.ResponseHeadersRead,
+					c);
+				var downloadLength = downloadTask.Content.Headers.ContentLength;
+				_logger.LogDebug("Проверка результата запроса");
+				downloadTask.EnsureSuccessStatusCode();
+				_logger.LogDebug("Положительный результат запроса");
+				////await downloadTask.Content.CopyToAsync(fileStream, c);
+				var prevPersent = 0.0;
+				await CopyAsync(
+					await downloadTask.Content.ReadAsStreamAsync(),
+					//await client.GetStreamAsync(downloadFileInfo.GarXMLFullURL, c),
+					fileStream,
+					1024 * 1024,
+					c,
+					(readen, length) => {
+						length = length ?? downloadLength;
+						if (length == null)
+						{
+							_logger.LogInformation($"Скачано {readen/1024.0/1024.0:0.00} МБ");
+							return;
+						}
+						var persent = 100.0 * readen / length.Value;
+						if (persent - prevPersent >= 3)
+						{
+							_logger.LogInformation($"Скачано {persent:0.00}%; {readen/1024.0/1024.0:0.00} из {length.Value/1024.0/1024.0:0.00} МБ");
+							prevPersent = persent;
+						}
+					});
+
+				/*
+				var lastPersentage = 0;
+				client.DownloadProgressChanged += (sender, e) => {
+					if (e.ProgressPercentage - lastPersentage >= 3)
+						_logger.LogInformation($"Скачано {e.ProgressPercentage}%; {e.BytesReceived/1024.0/1024.0:0.00} из {e.TotalBytesToReceive/1024.0/1024.0:0.00} МБ");
+					lastPersentage = e.ProgressPercentage;
+					if (c.IsCancellationRequested)
+						client.CancelAsync();
+				};
+				
+				var t = client.DownloadFileTaskAsync(
+					downloadFileInfo.GarXMLFullURL,
+					_updaterConfiguration.GarFullPath);
+				t.Wait((int)_updaterConfiguration.ArchiveDownloadTimeoutValue.TotalMilliseconds);
+				if (!t.IsCompleted) throw new TimeoutException("Истекло время ожидания скачивания архива с данными");
+				*/
+
+				_logger.LogInformation($"Загружено {(new System.IO.FileInfo(_updaterConfiguration.GarFullPath).Length / 1024.0 / 1024.0):0.00} МиБ");
+				
+				_logger.LogInformation($"Загружено {(new System.IO.FileInfo(_updaterConfiguration.GarFullPath).Length / 1024.0 / 1024.0):0.00} МиБ");
 				_logger.LogInformation("Архив с данными загружен: " + _updaterConfiguration.GarFullPath);
 			}
 			else
@@ -116,6 +172,33 @@ namespace GarLoader.Engine
 			LoadRegionEntryInParallel<MunicipalHierarchyItem>(_updaterConfiguration.GarFullPath, "AS_MUN_HIERARCHY_");
 
 			Complete();
+		}
+
+		private static async Task CopyAsync(Stream from, Stream to, int bufferSize, CancellationToken token, Action<long, long?> progress)
+		{
+			long? srcLength = null;
+			try
+			{
+				srcLength = from.Length;
+			}
+			catch
+			{}
+			Memory<byte> buf = new byte[bufferSize];
+			int readen = 0;
+			long totalReaden = 0;
+			int i = 0;
+			while((readen = await from.ReadAsync(buf, token)) > 0)
+			{
+				totalReaden += readen;
+				if (token.IsCancellationRequested)
+					return;
+				await to.WriteAsync(buf.Slice(0, readen), token);
+				if (++i >= 1000)
+				{
+					i = 0;
+					progress(totalReaden, srcLength);
+				}
+			}
 		}
 
 		private static IEnumerable<T> GetObjectsFromXmlReader<T>(System.IO.Stream entry, Func<T, T> prepareItem = null)
