@@ -89,13 +89,11 @@ namespace GarLoader.Engine
 				_logger.LogInformation($"Загрузка обновления {downloadFileInfo.VersionId} ({downloadFileInfo.TextVersion})");
 
 				_logger.LogInformation($"Скачивание файла {downloadFileInfo.GarXMLFullURL} ...");
-				//using var client = new System.Net.WebClient();
 				using var client = _httpFactory.CreateClient();
 				client.Timeout = _updaterConfiguration.ArchiveDownloadTimeoutValue;
 				_updaterConfiguration.GarFullPath = System.IO.Path.Combine(_updaterConfiguration.ArchivesDirectory, $"gar {downloadFileInfo.VersionId}.zip");
 
 				await using var fileStream = System.IO.File.OpenWrite(_updaterConfiguration.GarFullPath);
-				//using var downloadTask = await client.GetAsync(downloadFileInfo.GarXMLFullURL, c);
 				using var downloadTask = await client.SendAsync(new HttpRequestMessage
 					{
 						Method = HttpMethod.Get,
@@ -107,11 +105,9 @@ namespace GarLoader.Engine
 				_logger.LogDebug("Проверка результата запроса");
 				downloadTask.EnsureSuccessStatusCode();
 				_logger.LogDebug("Положительный результат запроса");
-				////await downloadTask.Content.CopyToAsync(fileStream, c);
 				var prevPersent = 0.0;
 				await CopyAsync(
 					await downloadTask.Content.ReadAsStreamAsync(),
-					//await client.GetStreamAsync(downloadFileInfo.GarXMLFullURL, c),
 					fileStream,
 					1024 * 1024,
 					c,
@@ -129,23 +125,6 @@ namespace GarLoader.Engine
 							prevPersent = persent;
 						}
 					});
-
-				/*
-				var lastPersentage = 0;
-				client.DownloadProgressChanged += (sender, e) => {
-					if (e.ProgressPercentage - lastPersentage >= 3)
-						_logger.LogInformation($"Скачано {e.ProgressPercentage}%; {e.BytesReceived/1024.0/1024.0:0.00} из {e.TotalBytesToReceive/1024.0/1024.0:0.00} МБ");
-					lastPersentage = e.ProgressPercentage;
-					if (c.IsCancellationRequested)
-						client.CancelAsync();
-				};
-				
-				var t = client.DownloadFileTaskAsync(
-					downloadFileInfo.GarXMLFullURL,
-					_updaterConfiguration.GarFullPath);
-				t.Wait((int)_updaterConfiguration.ArchiveDownloadTimeoutValue.TotalMilliseconds);
-				if (!t.IsCompleted) throw new TimeoutException("Истекло время ожидания скачивания архива с данными");
-				*/
 
 				_logger.LogInformation($"Загружено {(new System.IO.FileInfo(_updaterConfiguration.GarFullPath).Length / 1024.0 / 1024.0):0.00} МиБ");
 				
