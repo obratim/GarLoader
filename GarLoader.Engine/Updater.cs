@@ -41,8 +41,6 @@ namespace GarLoader.Engine
 				
 				if (!System.IO.Directory.Exists(_updaterConfiguration.ArchivesDirectory))
 					System.IO.Directory.CreateDirectory(_updaterConfiguration.ArchivesDirectory);
-				foreach (var archPath in System.IO.Directory.GetFiles(_updaterConfiguration.ArchivesDirectory))
-					System.IO.File.Delete(archPath);
 
 				if (string.IsNullOrEmpty(_updaterConfiguration.GarFullPath))
 				{
