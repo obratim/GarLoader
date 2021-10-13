@@ -44,7 +44,7 @@ namespace GarLoader.Engine
 
 				if (string.IsNullOrEmpty(_updaterConfiguration.GarFullPath))
 				{
-					var updates = DownloadsArray().Result;
+					var updates = await DownloadsArray();
 					_logger.LogInformation("Получены сведения ссылки на загрузку архивов: " + updates.Count);
 
 					var newestUpdate = updates
