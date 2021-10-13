@@ -158,16 +158,19 @@ namespace GarLoader.Engine
 			}
 			catch
 			{}
-			Memory<byte> buf = new byte[bufferSize];
-			int readen = 0;
+			Memory<byte> buf1 = new byte[bufferSize], buf2 = new byte[bufferSize];
+			int prevReaden = 0, i = 0;
 			long totalReaden = 0;
-			int i = 0;
-			while((readen = await from.ReadAsync(buf, token)) > 0)
+			while (true)
 			{
-				totalReaden += readen;
-				if (token.IsCancellationRequested)
-					return;
-				await to.WriteAsync(buf.Slice(0, readen), token);
+				var writeTask = to.WriteAsync(buf1.Slice(0, prevReaden), token);
+				var readTask = from.ReadAsync(buf2, token);
+				await writeTask;
+				var readen = await readTask;
+				if (readen == 0)
+					break;
+				(buf1, buf2) = (buf2, buf1);
+				totalReaden += (prevReaden = readen);
 				if (++i >= 1000)
 				{
 					i = 0;
