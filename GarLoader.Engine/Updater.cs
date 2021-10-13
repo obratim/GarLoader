@@ -125,8 +125,6 @@ namespace GarLoader.Engine
 					});
 
 				_logger.LogInformation($"Загружено {(new System.IO.FileInfo(_updaterConfiguration.GarFullPath).Length / 1024.0 / 1024.0):0.00} МиБ");
-				
-				_logger.LogInformation($"Загружено {(new System.IO.FileInfo(_updaterConfiguration.GarFullPath).Length / 1024.0 / 1024.0):0.00} МиБ");
 				_logger.LogInformation("Архив с данными загружен: " + _updaterConfiguration.GarFullPath);
 			}
 			else
